@@ -1,5 +1,7 @@
 import 'package:appinio_swiper/appinio_swiper.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -23,6 +25,17 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
   final AppinioSwiperController _swiperController = AppinioSwiperController();
   final Map<String, int> _photoCarouselIndices = {};
   
+  // Custom PageController for Reels vertical swiping
+  late PageController _pageController;
+  late FocusNode _focusNode;
+  bool _isPageAnimating = false;
+  int _currentReelIndex = 0;
+  
+  // Drag state trackers for pure Apple-style touch snapping
+  double _dragStartY = 0;
+  double _currentScrollOffset = 0;
+  bool _dragActive = false;
+
   // Double-tap heart animation states
   bool _showHeartPop = false;
   String _activeHeartProfileId = '';
@@ -30,7 +43,48 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
   @override
   void initState() {
     super.initState();
+    _pageController = PageController();
+    _focusNode = FocusNode();
     Future.microtask(() => ref.read(discoverProvider.notifier).fetchMatches());
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _focusNode.requestFocus();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _goToNextPage(int maxCount) {
+    if (_isPageAnimating || !_pageController.hasClients) return;
+    if (_currentReelIndex >= maxCount - 1) return;
+    
+    _isPageAnimating = true;
+    _currentReelIndex++;
+    _pageController.animateToPage(
+      _currentReelIndex,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    ).then((_) => _isPageAnimating = false);
+  }
+
+  void _goToPrevPage() {
+    if (_isPageAnimating || !_pageController.hasClients) return;
+    if (_currentReelIndex <= 0) return;
+    
+    _isPageAnimating = true;
+    _currentReelIndex--;
+    _pageController.animateToPage(
+      _currentReelIndex,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    ).then((_) => _isPageAnimating = false);
   }
 
   int _getPhotoIndex(String profileId) {
@@ -411,224 +465,303 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
     );
   }
 
-  // Reels View Mode (Vertical Swiper PageView)
+  // Reels View Mode (Vertical Swiper PageView with custom Apple Snapping & keyboard/trackpad control)
   Widget _buildReelsView(List<dynamic> profiles) {
-    return PageView.builder(
-      scrollDirection: Axis.vertical,
-      itemCount: profiles.length,
-      itemBuilder: (context, index) {
-        final profile = profiles[index];
-        final photos = profile['photos'] as List<dynamic>? ?? [];
-        final photoIdx = _getPhotoIndex(profile['id']);
-        final hasPhotos = photos.isNotEmpty;
-        
-        String activePhotoUrl = '';
-        if (hasPhotos) {
-          final relative = photos[photoIdx];
-          activePhotoUrl = relative.startsWith('http') ? relative : '${ApiService.baseUrl}$relative';
+    return Focus(
+      focusNode: _focusNode,
+      autofocus: true,
+      onKeyEvent: (node, event) {
+        if (event is KeyDownEvent) {
+          if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+            _goToNextPage(profiles.length);
+            return KeyEventResult.handled;
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+            _goToPrevPage();
+            return KeyEventResult.handled;
+          }
         }
+        return KeyEventResult.ignored;
+      },
+      child: Listener(
+        onPointerSignal: (pointerSignal) {
+          if (pointerSignal is PointerScrollEvent) {
+            final dy = pointerSignal.scrollDelta.dy;
+            if (dy > 15) {
+              _goToNextPage(profiles.length);
+            } else if (dy < -15) {
+              _goToPrevPage();
+            }
+          }
+        },
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onVerticalDragStart: (details) {
+            if (!_pageController.hasClients || _isPageAnimating) return;
+            _dragStartY = details.globalPosition.dy;
+            _currentScrollOffset = _pageController.offset;
+            _dragActive = true;
+          },
+          onVerticalDragUpdate: (details) {
+            if (!_dragActive || !_pageController.hasClients) return;
+            final deltaY = _dragStartY - details.globalPosition.dy;
+            
+            double targetOffset = _currentScrollOffset + deltaY;
+            final maxOffset = _pageController.position.maxScrollExtent;
+            if (targetOffset < 0) {
+              targetOffset = targetOffset * 0.3; // Resist sliding out of bounds at top
+            } else if (targetOffset > maxOffset) {
+              targetOffset = maxOffset + (targetOffset - maxOffset) * 0.3; // Resist sliding out of bounds at bottom
+            }
+            
+            _pageController.position.correctPixels(targetOffset);
+            _pageController.position.notifyListeners();
+          },
+          onVerticalDragEnd: (details) {
+            if (!_dragActive || !_pageController.hasClients) return;
+            _dragActive = false;
+            
+            final pageHeight = _pageController.position.viewportDimension;
+            final dragDeltaY = _dragStartY - details.globalPosition.dy;
+            final velocity = details.primaryVelocity ?? 0;
+            
+            int targetPage = _currentReelIndex;
+            if (velocity < -250 || dragDeltaY > pageHeight * 0.22) {
+              targetPage = _currentReelIndex + 1;
+            } else if (velocity > 250 || dragDeltaY < -pageHeight * 0.22) {
+              targetPage = _currentReelIndex - 1;
+            }
+            
+            targetPage = targetPage.clamp(0, profiles.length - 1);
+            
+            _isPageAnimating = true;
+            _currentReelIndex = targetPage;
+            _pageController.animateToPage(
+              _currentReelIndex,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            ).then((_) => _isPageAnimating = false);
+          },
+          child: PageView.builder(
+            controller: _pageController,
+            physics: const NeverScrollableScrollPhysics(), // Blocks default trackpad scroll page-skipping
+            scrollDirection: Axis.vertical,
+            itemCount: profiles.length,
+            itemBuilder: (context, index) {
+              final profile = profiles[index];
+              final photos = profile['photos'] as List<dynamic>? ?? [];
+              final photoIdx = _getPhotoIndex(profile['id']);
+              final hasPhotos = photos.isNotEmpty;
+              
+              String activePhotoUrl = '';
+              if (hasPhotos) {
+                final relative = photos[photoIdx];
+                activePhotoUrl = relative.startsWith('http') ? relative : '${ApiService.baseUrl}$relative';
+              }
 
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            // Expanded full screen photo image
-            Positioned.fill(
-              child: GestureDetector(
-                onTapDown: (details) {
-                  final cardWidth = MediaQuery.of(context).size.width;
-                  final tapX = details.localPosition.dx;
-                  if (tapX < cardWidth * 0.33) {
-                    _setPhotoIndex(profile['id'], photoIdx - 1, photos.length);
-                  } else {
-                    _setPhotoIndex(profile['id'], photoIdx + 1, photos.length);
-                  }
-                },
-                onDoubleTap: () {
-                  setState(() {
-                    _activeHeartProfileId = profile['id'];
-                    _showHeartPop = true;
-                  });
-                  _handleSwipeAction(profile['id'], 'accepted');
-                  Future.delayed(const Duration(milliseconds: 800), () {
-                    if (mounted) setState(() => _showHeartPop = false);
-                  });
-                },
-                child: hasPhotos
-                    ? CachedNetworkImage(
-                        imageUrl: activePhotoUrl,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => const Center(child: CircularProgressIndicator(color: Colors.black)),
-                        errorWidget: (context, url, err) => _buildReelsPlaceholder(),
-                      )
-                    : _buildReelsPlaceholder(),
-              ),
-            ),
-
-            // Subtle dark overlay gradient at the bottom for text readability
-            Positioned.fill(
-              child: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.black38,
-                      Colors.transparent,
-                      Colors.transparent,
-                      Colors.black54,
-                    ],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    stops: [0.0, 0.2, 0.7, 1.0],
-                  ),
-                ),
-              ),
-            ),
-
-            // Top Carousel navigation indicators
-            if (photos.length > 1)
-              Positioned(
-                top: 80,
-                left: 16,
-                right: 16,
-                child: Row(
-                  children: List.generate(photos.length, (idx) {
-                    return Expanded(
-                      child: Container(
-                        height: 3,
-                        margin: const EdgeInsets.symmetric(horizontal: 2.0),
-                        decoration: BoxDecoration(
-                          color: idx == photoIdx ? Colors.white : Colors.white24,
-                          borderRadius: BorderRadius.circular(1.5),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ),
-
-            // Double tap pulsing heart overlay
-            if (_showHeartPop && _activeHeartProfileId == profile['id'])
-              const Center(child: PulsingHeartAnimation()),
-
-            // Bio Metadata Details (Bottom-Left)
-            Positioned(
-              left: 20,
-              bottom: 40,
-              right: 80,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              return Stack(
+                fit: StackFit.expand,
                 children: [
-                  Row(
-                    children: [
-                      Text(
-                        '${profile['name']}, ${profile['age']}',
-                        style: GoogleFonts.inter(
-                          color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          shadows: [const Shadow(color: Colors.black87, blurRadius: 8, offset: Offset(0, 1))],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      if (profile['face_verified'] == true)
-                        const Icon(Icons.verified, color: Colors.white, size: 22),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      const Icon(Icons.location_on_rounded, color: Colors.white70, size: 16),
-                      const SizedBox(width: 4),
-                      Text(
-                        profile['city'] ?? 'Location N/A',
-                        style: GoogleFonts.inter(
-                          color: Colors.white,
-                          fontSize: 15,
-                          shadows: [const Shadow(color: Colors.black87, blurRadius: 8)],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  
-                  // Astro quick info tags
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.black45,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.white30),
-                        ),
-                        child: Text(
-                          profile['family_details']?['star'] ?? 'Star N/A',
-                          style: GoogleFonts.inter(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.black45,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.white30),
-                        ),
-                        child: Text(
-                          profile['family_details']?['rasi'] ?? 'Rasi N/A',
-                          style: GoogleFonts.inter(color: Colors.white, fontSize: 11),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            // Action Buttons Tray (Right-Side floating menu)
-            Positioned(
-              right: 16,
-              bottom: 40,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildReelsBtn(
-                    icon: Icons.info_outline_rounded,
-                    color: Colors.white,
-                    onTap: () => _showDetailsSheet(profile),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildReelsBtn(
-                    icon: Icons.close_rounded,
-                    color: Colors.white,
-                    onTap: () => _handleSwipeAction(profile['id'], 'rejected'),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildReelsBtn(
-                    icon: Icons.favorite_rounded,
-                    color: Colors.white,
-                    onTap: () => _handleSwipeAction(profile['id'], 'accepted'),
-                  ),
-                  const SizedBox(height: 16),
-                  GestureDetector(
-                    onTap: () => _handleSwipeAction(profile['id'], 'accepted', type: 'rose'),
-                    child: Container(
-                      height: 48,
-                      width: 48,
-                      decoration: BoxDecoration(
-                        color: Colors.black45,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white30),
-                      ),
-                      alignment: Alignment.center,
-                      child: const Text('🌹', style: TextStyle(fontSize: 22)),
+                  // Expanded full screen photo image
+                  Positioned.fill(
+                    child: GestureDetector(
+                      onTapDown: (details) {
+                        final cardWidth = MediaQuery.of(context).size.width;
+                        final tapX = details.localPosition.dx;
+                        if (tapX < cardWidth * 0.33) {
+                          _setPhotoIndex(profile['id'], photoIdx - 1, photos.length);
+                        } else {
+                          _setPhotoIndex(profile['id'], photoIdx + 1, photos.length);
+                        }
+                      },
+                      onDoubleTap: () {
+                        setState(() {
+                          _activeHeartProfileId = profile['id'];
+                          _showHeartPop = true;
+                        });
+                        _handleSwipeAction(profile['id'], 'accepted');
+                        Future.delayed(const Duration(milliseconds: 800), () {
+                          if (mounted) setState(() => _showHeartPop = false);
+                        });
+                      },
+                      child: hasPhotos
+                          ? CachedNetworkImage(
+                              imageUrl: activePhotoUrl,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => const Center(child: CircularProgressIndicator(color: Colors.black)),
+                              errorWidget: (context, url, err) => _buildReelsPlaceholder(),
+                            )
+                          : _buildReelsPlaceholder(),
                     ),
                   ),
+
+                  // Subtle dark overlay gradient at the bottom for text readability
+                  Positioned.fill(
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.black38,
+                            Colors.transparent,
+                            Colors.transparent,
+                            Colors.black54,
+                          ],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          stops: [0.0, 0.2, 0.7, 1.0],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Top Carousel navigation indicators
+                  if (photos.length > 1)
+                    Positioned(
+                      top: 80,
+                      left: 16,
+                      right: 16,
+                      child: Row(
+                        children: List.generate(photos.length, (idx) {
+                          return Expanded(
+                            child: Container(
+                              height: 3,
+                              margin: const EdgeInsets.symmetric(horizontal: 2.0),
+                              decoration: BoxDecoration(
+                                color: idx == photoIdx ? Colors.white : Colors.white24,
+                                borderRadius: BorderRadius.circular(1.5),
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+
+                  // Double tap pulsing heart overlay
+                  if (_showHeartPop && _activeHeartProfileId == profile['id'])
+                    const Center(child: PulsingHeartAnimation()),
+
+                  // Bio Metadata Details (Bottom-Left)
+                  Positioned(
+                    left: 20,
+                    bottom: 40,
+                    right: 80,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              '${profile['name']}, ${profile['age']}',
+                              style: GoogleFonts.inter(
+                                color: Colors.white,
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                shadows: [const Shadow(color: Colors.black87, blurRadius: 8, offset: Offset(0, 1))],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            if (profile['face_verified'] == true)
+                              const Icon(Icons.verified, color: Colors.white, size: 22),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on_rounded, color: Colors.white70, size: 16),
+                            const SizedBox(width: 4),
+                            Text(
+                              profile['city'] ?? 'Location N/A',
+                              style: GoogleFonts.inter(
+                                color: Colors.white,
+                                fontSize: 15,
+                                shadows: [const Shadow(color: Colors.black87, blurRadius: 8)],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        
+                        // Astro quick info tags
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.black45,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.white30),
+                              ),
+                              child: Text(
+                                profile['family_details']?['star'] ?? 'Star N/A',
+                                style: GoogleFonts.inter(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.black45,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.white30),
+                              ),
+                              child: Text(
+                                profile['family_details']?['rasi'] ?? 'Rasi N/A',
+                                style: GoogleFonts.inter(color: Colors.white, fontSize: 11),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Action Buttons Tray (Right-Side floating menu)
+                  Positioned(
+                    right: 16,
+                    bottom: 40,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildReelsBtn(
+                          icon: Icons.info_outline_rounded,
+                          color: Colors.white,
+                          onTap: () => _showDetailsSheet(profile),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildReelsBtn(
+                          icon: Icons.close_rounded,
+                          color: Colors.white,
+                          onTap: () => _handleSwipeAction(profile['id'], 'rejected'),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildReelsBtn(
+                          icon: Icons.favorite_rounded,
+                          color: Colors.white,
+                          onTap: () => _handleSwipeAction(profile['id'], 'accepted'),
+                        ),
+                        const SizedBox(height: 16),
+                        GestureDetector(
+                          onTap: () => _handleSwipeAction(profile['id'], 'accepted', type: 'rose'),
+                          child: Container(
+                            height: 48,
+                            width: 48,
+                            decoration: BoxDecoration(
+                              color: Colors.black45,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white30),
+                            ),
+                            alignment: Alignment.center,
+                            child: const Text('🌹', style: TextStyle(fontSize: 22)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
                 ],
-              ),
-            )
-          ],
-        );
-      },
+              );
+            },
+          ),
+        ),
+      ),
     );
   }
 
