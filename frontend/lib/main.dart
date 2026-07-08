@@ -24,7 +24,7 @@ class MatrimonyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Varudu Matrimony',
       debugShowCheckedModeBanner: false,
-      theme: PremiumTheme.darkTheme,
+      theme: PremiumTheme.lightTheme,
       home: const AuthWrapper(),
     );
   }

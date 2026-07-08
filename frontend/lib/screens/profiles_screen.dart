@@ -21,10 +21,8 @@ class ProfilesScreen extends ConsumerStatefulWidget {
 class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
   ViewMode _currentMode = ViewMode.reels;
   final AppinioSwiperController _swiperController = AppinioSwiperController();
-  
-  // Carousel photo indices mapped by profile ID
   final Map<String, int> _photoCarouselIndices = {};
-
+  
   // Double-tap heart animation states
   bool _showHeartPop = false;
   String _activeHeartProfileId = '';
@@ -57,15 +55,19 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
         interactionType: type,
       );
 
-      final profileName = ref.read(discoverProvider).profiles.firstWhere((p) => p['id'] == targetId, orElse: () => {'name': 'User'})['name'];
+      final profiles = ref.read(discoverProvider).profiles;
+      final profileName = profiles.firstWhere((p) => p['id'] == targetId, orElse: () => {'name': 'User'})['name'];
 
       if (res['match'] == true) {
         _showMatchDialog(profileName);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(type == 'rose' ? 'Premium Rose Swipe Sent! 🌹' : 'Liked $profileName!'),
-            backgroundColor: PremiumTheme.goldAccent,
+            content: Text(
+              type == 'rose' ? 'Premium Rose Swipe Sent! 🌹' : 'Liked $profileName!',
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.black,
             duration: const Duration(seconds: 2),
           ),
         );
@@ -73,8 +75,8 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(e.toString()),
-          backgroundColor: PremiumTheme.crimsonRed,
+          content: Text(e.toString(), style: const TextStyle(color: Colors.white)),
+          backgroundColor: Colors.black,
         ),
       );
     }
@@ -84,32 +86,28 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
           padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: PremiumTheme.surfaceCard,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: PremiumTheme.goldAccent, width: 1.5),
-          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.favorite_rounded, color: PremiumTheme.crimsonRed, size: 72),
+              const Icon(Icons.favorite_rounded, color: Colors.black, size: 72),
               const SizedBox(height: 16),
               Text(
                 'It\'s a Match! 🌹',
-                style: GoogleFonts.cormorantGaramond(
-                  fontSize: 28,
+                style: GoogleFonts.inter(
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: PremiumTheme.goldAccent,
+                  color: Colors.black,
                 ),
               ),
               const SizedBox(height: 12),
               Text(
                 'You and $name have expressed mutual interest. Start chatting to know each other!',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(color: PremiumTheme.textSilver, fontSize: 14),
+                style: GoogleFonts.inter(color: Colors.grey.shade600, fontSize: 14),
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -117,9 +115,9 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: PremiumTheme.goldAccent,
-                    foregroundColor: PremiumTheme.primaryBgBlack,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   child: const Text('Great!'),
                 ),
@@ -131,15 +129,14 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
     );
   }
 
-  // Display details bottom sheet
   void _showDetailsSheet(Map<String, dynamic> profile) {
     final family = profile['family_details'] ?? {};
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: PremiumTheme.surfaceCard,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
         return DraggableScrollableSheet(
@@ -159,7 +156,7 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade800,
+                        color: Colors.grey.shade300,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -176,32 +173,31 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
                             children: [
                               Text(
                                 '${profile['name']}, ${profile['age']}',
-                                style: GoogleFonts.cormorantGaramond(
-                                  fontSize: 28,
+                                style: GoogleFonts.inter(
+                                  fontSize: 24,
                                   fontWeight: FontWeight.bold,
-                                  color: PremiumTheme.textWhite,
+                                  color: Colors.black,
                                 ),
                               ),
                               const SizedBox(width: 8),
                               if (profile['face_verified'] == true)
-                                const Icon(Icons.verified, color: PremiumTheme.goldAccent, size: 20),
+                                const Icon(Icons.verified, color: Colors.black, size: 20),
                             ],
                           ),
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              const Icon(Icons.location_on_rounded, color: PremiumTheme.goldAccent, size: 16),
+                              const Icon(Icons.location_on_rounded, color: Colors.black, size: 16),
                               const SizedBox(width: 4),
                               Text(
                                 profile['city'] ?? 'Location N/A',
-                                style: GoogleFonts.inter(color: PremiumTheme.textSilver, fontSize: 15),
+                                style: GoogleFonts.inter(color: Colors.grey.shade600, fontSize: 15),
                               ),
                             ],
                           ),
                         ],
                       ),
 
-                      // Ashtakoota compatibility launcher button
                       ElevatedButton.icon(
                         onPressed: () {
                           Navigator.push(
@@ -211,25 +207,23 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
                             ),
                           );
                         },
-                        icon: const Icon(Icons.auto_awesome_rounded, size: 16),
-                        label: const Text('Astro Match'),
+                        icon: const Icon(Icons.auto_awesome_rounded, size: 16, color: Colors.white),
+                        label: const Text('Astro Match', style: TextStyle(color: Colors.white)),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: PremiumTheme.goldAccent,
-                          foregroundColor: PremiumTheme.primaryBgBlack,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          backgroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                       )
                     ],
                   ),
-                  const Divider(color: Colors.white12, height: 32),
+                  const Divider(color: Colors.black12, height: 32),
 
-                  // Section Horoscope details
                   Text(
                     'Astrological Coordinates',
-                    style: GoogleFonts.cormorantGaramond(
-                      fontSize: 20,
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: PremiumTheme.goldAccent,
+                      color: Colors.black,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -241,13 +235,12 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
 
                   const SizedBox(height: 24),
 
-                  // Section Cultural details
                   Text(
                     'Cultural & Professional Details',
-                    style: GoogleFonts.cormorantGaramond(
-                      fontSize: 20,
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: PremiumTheme.goldAccent,
+                      color: Colors.black,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -268,12 +261,12 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
 
   Widget _buildDetailRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: GoogleFonts.inter(color: PremiumTheme.textMuted, fontSize: 14)),
-          Text(value, style: GoogleFonts.inter(color: PremiumTheme.textWhite, fontSize: 14, fontWeight: FontWeight.bold)),
+          Text(label, style: GoogleFonts.inter(color: Colors.grey.shade600, fontSize: 14)),
+          Text(value, style: GoogleFonts.inter(color: Colors.black, fontSize: 14, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -284,18 +277,18 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
     final discoverState = ref.watch(discoverProvider);
 
     return Scaffold(
-      backgroundColor: PremiumTheme.primaryBgBlack,
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           // Profiles matcher stack / reels
           Positioned.fill(
             child: discoverState.isLoading
-                ? const Center(child: CircularProgressIndicator(color: PremiumTheme.goldAccent))
+                ? const Center(child: CircularProgressIndicator(color: Colors.black))
                 : discoverState.errorMessage.isNotEmpty
                     ? Center(
                         child: Text(
                           discoverState.errorMessage,
-                          style: GoogleFonts.inter(color: PremiumTheme.crimsonRed),
+                          style: GoogleFonts.inter(color: Colors.red),
                         ),
                       )
                     : discoverState.profiles.isEmpty
@@ -305,49 +298,55 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
                             : _buildStackView(discoverState.profiles),
           ),
 
-          // Header segmented control toggles
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: const BoxDecoration(
-                        color: Colors.black38,
-                        shape: BoxShape.circle,
+          // Header segmented control toggles (Minimalist Apple Style)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.black12),
+                        ),
+                        child: const Icon(
+                          Icons.arrow_back_rounded,
+                          color: Colors.black,
+                          size: 20,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.arrow_back_rounded,
-                        color: PremiumTheme.textWhite,
-                        size: 22,
+                    ),
+
+                    // Segmented control toggle
+                    Container(
+                      height: 40,
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.black12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildModeToggle(ViewMode.stack, 'STACK'),
+                          _buildModeToggle(ViewMode.reels, 'REELS'),
+                        ],
                       ),
                     ),
-                  ),
 
-                  // Segmented control toggle
-                  Container(
-                    height: 44,
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.black38,
-                      borderRadius: BorderRadius.circular(22),
-                      border: Border.all(color: Colors.white12),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildModeToggle(ViewMode.stack, 'STACK'),
-                        _buildModeToggle(ViewMode.reels, 'REELS'),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(width: 46), // Align center balance
-                ],
+                    const SizedBox(width: 40), // Align center balance
+                  ],
+                ),
               ),
             ),
           ),
@@ -366,19 +365,21 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
       },
       child: Container(
         height: 36,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 18),
         decoration: BoxDecoration(
-          color: isSelected ? PremiumTheme.goldAccent : Colors.transparent,
+          color: isSelected ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(18),
+          boxShadow: isSelected
+              ? [const BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))]
+              : null,
         ),
         alignment: Alignment.center,
         child: Text(
           label,
-          style: GoogleFonts.outfit(
-            color: isSelected ? PremiumTheme.primaryBgBlack : PremiumTheme.textSilver,
+          style: GoogleFonts.inter(
+            color: isSelected ? Colors.black : Colors.grey.shade600,
             fontSize: 12,
             fontWeight: FontWeight.bold,
-            letterSpacing: 0.8,
           ),
         ),
       ),
@@ -390,27 +391,27 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.heart_broken_outlined, size: 64, color: PremiumTheme.textMuted),
+          const Icon(Icons.favorite_border_rounded, size: 64, color: Colors.grey),
           const SizedBox(height: 16),
           Text(
-            'No matching profiles found',
-            style: GoogleFonts.cormorantGaramond(
-              fontSize: 22,
-              color: PremiumTheme.textWhite,
+            'No profiles found',
+            style: GoogleFonts.inter(
+              fontSize: 20,
+              color: Colors.black,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 6),
           Text(
-            'Try updating your preference settings',
-            style: GoogleFonts.inter(color: PremiumTheme.textMuted, fontSize: 13),
+            'Check back later for new profiles',
+            style: GoogleFonts.inter(color: Colors.grey, fontSize: 13),
           ),
         ],
       ),
     );
   }
 
-  // Reels Full screen Vertical View Mode
+  // Reels View Mode (Vertical Swiper PageView)
   Widget _buildReelsView(List<dynamic> profiles) {
     return PageView.builder(
       scrollDirection: Axis.vertical,
@@ -430,57 +431,59 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
         return Stack(
           fit: StackFit.expand,
           children: [
-            // Tap Zone Photo Carousel navigation
-            GestureDetector(
-              onTapDown: (details) {
-                final cardWidth = MediaQuery.of(context).size.width;
-                final tapX = details.localPosition.dx;
-                if (tapX < cardWidth * 0.33) {
-                  _setPhotoIndex(profile['id'], photoIdx - 1, photos.length);
-                } else {
-                  _setPhotoIndex(profile['id'], photoIdx + 1, photos.length);
-                }
-              },
-              onDoubleTap: () {
-                setState(() {
-                  _activeHeartProfileId = profile['id'];
-                  _showHeartPop = true;
-                });
-                _handleSwipeAction(profile['id'], 'accepted');
-                Future.delayed(const Duration(milliseconds: 800), () {
-                  if (mounted) setState(() => _showHeartPop = false);
-                });
-              },
-              child: hasPhotos
-                  ? CachedNetworkImage(
-                      imageUrl: activePhotoUrl,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                      errorWidget: (context, url, err) => _buildReelsPlaceholder(),
-                    )
-                  : _buildReelsPlaceholder(),
+            // Expanded full screen photo image
+            Positioned.fill(
+              child: GestureDetector(
+                onTapDown: (details) {
+                  final cardWidth = MediaQuery.of(context).size.width;
+                  final tapX = details.localPosition.dx;
+                  if (tapX < cardWidth * 0.33) {
+                    _setPhotoIndex(profile['id'], photoIdx - 1, photos.length);
+                  } else {
+                    _setPhotoIndex(profile['id'], photoIdx + 1, photos.length);
+                  }
+                },
+                onDoubleTap: () {
+                  setState(() {
+                    _activeHeartProfileId = profile['id'];
+                    _showHeartPop = true;
+                  });
+                  _handleSwipeAction(profile['id'], 'accepted');
+                  Future.delayed(const Duration(milliseconds: 800), () {
+                    if (mounted) setState(() => _showHeartPop = false);
+                  });
+                },
+                child: hasPhotos
+                    ? CachedNetworkImage(
+                        imageUrl: activePhotoUrl,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => const Center(child: CircularProgressIndicator(color: Colors.black)),
+                        errorWidget: (context, url, err) => _buildReelsPlaceholder(),
+                      )
+                    : _buildReelsPlaceholder(),
+              ),
             ),
 
-            // Shading Gradient overlay
+            // Subtle dark overlay gradient at the bottom for text readability
             Positioned.fill(
               child: Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
+                      Colors.black38,
+                      Colors.transparent,
+                      Colors.transparent,
                       Colors.black54,
-                      Colors.transparent,
-                      Colors.transparent,
-                      Colors.black.withOpacity(0.9),
                     ],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    stops: const [0.0, 0.25, 0.7, 1.0],
+                    stops: [0.0, 0.2, 0.7, 1.0],
                   ),
                 ),
               ),
             ),
 
-            // Top Carousel Navigation Bars (Instagram style)
+            // Top Carousel navigation indicators
             if (photos.length > 1)
               Positioned(
                 top: 80,
@@ -493,7 +496,7 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
                         height: 3,
                         margin: const EdgeInsets.symmetric(horizontal: 2.0),
                         decoration: BoxDecoration(
-                          color: idx == photoIdx ? PremiumTheme.goldAccent : Colors.white24,
+                          color: idx == photoIdx ? Colors.white : Colors.white24,
                           borderRadius: BorderRadius.circular(1.5),
                         ),
                       ),
@@ -506,7 +509,7 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
             if (_showHeartPop && _activeHeartProfileId == profile['id'])
               const Center(child: PulsingHeartAnimation()),
 
-            // Bio Metadata (Bottom-Left)
+            // Bio Metadata Details (Bottom-Left)
             Positioned(
               left: 20,
               bottom: 40,
@@ -518,53 +521,61 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
                     children: [
                       Text(
                         '${profile['name']}, ${profile['age']}',
-                        style: GoogleFonts.cormorantGaramond(
-                          color: PremiumTheme.textWhite,
-                          fontSize: 32,
+                        style: GoogleFonts.inter(
+                          color: Colors.white,
+                          fontSize: 28,
                           fontWeight: FontWeight.bold,
+                          shadows: [const Shadow(color: Colors.black87, blurRadius: 8, offset: Offset(0, 1))],
                         ),
                       ),
                       const SizedBox(width: 8),
                       if (profile['face_verified'] == true)
-                        const Icon(Icons.verified, color: PremiumTheme.goldAccent, size: 22),
+                        const Icon(Icons.verified, color: Colors.white, size: 22),
                     ],
                   ),
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      const Icon(Icons.location_on_rounded, color: PremiumTheme.goldAccent, size: 16),
+                      const Icon(Icons.location_on_rounded, color: Colors.white70, size: 16),
                       const SizedBox(width: 4),
                       Text(
                         profile['city'] ?? 'Location N/A',
-                        style: GoogleFonts.inter(color: PremiumTheme.textSilver, fontSize: 16),
+                        style: GoogleFonts.inter(
+                          color: Colors.white,
+                          fontSize: 15,
+                          shadows: [const Shadow(color: Colors.black87, blurRadius: 8)],
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  // Gothram / Star highlights
+                  
+                  // Astro quick info tags
                   Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.white12,
+                          color: Colors.black45,
                           borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.white30),
                         ),
                         child: Text(
                           profile['family_details']?['star'] ?? 'Star N/A',
-                          style: GoogleFonts.inter(color: PremiumTheme.goldAccent, fontSize: 12, fontWeight: FontWeight.bold),
+                          style: GoogleFonts.inter(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.white12,
+                          color: Colors.black45,
                           borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.white30),
                         ),
                         child: Text(
                           profile['family_details']?['rasi'] ?? 'Rasi N/A',
-                          style: GoogleFonts.inter(color: PremiumTheme.textWhite, fontSize: 12),
+                          style: GoogleFonts.inter(color: Colors.white, fontSize: 11),
                         ),
                       ),
                     ],
@@ -573,49 +584,43 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
               ),
             ),
 
-            // Reels Action Buttons Tray (Right-Side floating menu)
+            // Action Buttons Tray (Right-Side floating menu)
             Positioned(
               right: 16,
               bottom: 40,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Info Sheet button
                   _buildReelsBtn(
                     icon: Icons.info_outline_rounded,
-                    color: PremiumTheme.textWhite,
+                    color: Colors.white,
                     onTap: () => _showDetailsSheet(profile),
                   ),
                   const SizedBox(height: 16),
-
-                  // Swipe left pass button
                   _buildReelsBtn(
                     icon: Icons.close_rounded,
-                    color: PremiumTheme.textMuted,
+                    color: Colors.white,
                     onTap: () => _handleSwipeAction(profile['id'], 'rejected'),
                   ),
                   const SizedBox(height: 16),
-
-                  // Swipe right standard like button
                   _buildReelsBtn(
                     icon: Icons.favorite_rounded,
-                    color: PremiumTheme.crimsonRed,
+                    color: Colors.white,
                     onTap: () => _handleSwipeAction(profile['id'], 'accepted'),
                   ),
                   const SizedBox(height: 16),
-
-                  // Premium Rose swipe button
                   GestureDetector(
                     onTap: () => _handleSwipeAction(profile['id'], 'accepted', type: 'rose'),
                     child: Container(
-                      height: 52,
-                      width: 52,
-                      decoration: const BoxDecoration(
+                      height: 48,
+                      width: 48,
+                      decoration: BoxDecoration(
                         color: Colors.black45,
                         shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white30),
                       ),
                       alignment: Alignment.center,
-                      child: const Text('🌹', style: TextStyle(fontSize: 26)),
+                      child: const Text('🌹', style: TextStyle(fontSize: 22)),
                     ),
                   ),
                 ],
@@ -629,9 +634,9 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
 
   Widget _buildReelsPlaceholder() {
     return Container(
-      color: const Color(0xFF0F0F0F),
+      color: Colors.white,
       child: const Center(
-        child: Icon(Icons.person_rounded, size: 100, color: Colors.white12),
+        child: Icon(Icons.person_rounded, size: 80, color: Colors.black12),
       ),
     );
   }
@@ -640,19 +645,20 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 50,
-        width: 50,
-        decoration: const BoxDecoration(
+        height: 48,
+        width: 48,
+        decoration: BoxDecoration(
           color: Colors.black45,
           shape: BoxShape.circle,
+          border: Border.all(color: Colors.white30),
         ),
         alignment: Alignment.center,
-        child: Icon(icon, color: color, size: 26),
+        child: Icon(icon, color: color, size: 22),
       ),
     );
   }
 
-  // Mode A: Tinder AppinioSwiper Card Stack View
+  // Stack Swiper View Mode (Tinder Cards)
   Widget _buildStackView(List<dynamic> profiles) {
     return Container(
       padding: const EdgeInsets.only(top: 130, bottom: 40),
@@ -661,11 +667,14 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
         controller: _swiperController,
         cardCount: profiles.length,
         onSwipeEnd: (previousIndex, targetIndex, activity) {
-          final target = profiles[previousIndex];
-          if (activity.direction == AxisDirection.right) {
-            _handleSwipeAction(target['id'], 'accepted');
-          } else {
-            _handleSwipeAction(target['id'], 'rejected');
+          final idx = previousIndex - 1;
+          if (idx >= 0 && idx < profiles.length) {
+            final target = profiles[idx];
+            if (activity.direction == AxisDirection.right) {
+              _handleSwipeAction(target['id'], 'accepted');
+            } else {
+              _handleSwipeAction(target['id'], 'rejected');
+            }
           }
         },
         cardBuilder: (context, index) {
@@ -683,18 +692,19 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
           return Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              color: PremiumTheme.surfaceCard,
-              border: Border.all(color: Colors.white12),
+              borderRadius: BorderRadius.circular(20),
+              color: Colors.white,
+              border: Border.all(color: Colors.black12),
+              boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(20),
               child: Stack(
                 fit: StackFit.expand,
                 children: [
                   GestureDetector(
                     onTapDown: (details) {
-                      final cardWidth = MediaQuery.of(context).size.width - 64; // Approx card width
+                      final cardWidth = MediaQuery.of(context).size.width - 64;
                       final tapX = details.localPosition.dx;
                       if (tapX < cardWidth * 0.33) {
                         _setPhotoIndex(profile['id'], photoIdx - 1, photos.length);
@@ -706,88 +716,27 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
                         ? CachedNetworkImage(
                             imageUrl: activePhotoUrl,
                             fit: BoxFit.cover,
-                            placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                            placeholder: (context, url) => const Center(child: CircularProgressIndicator(color: Colors.black)),
                             errorWidget: (context, url, err) => _buildReelsPlaceholder(),
                           )
                         : _buildReelsPlaceholder(),
                   ),
 
-                  // Bottom metadata details overlay
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
+                  // Dark overlay gradient
+                  Positioned.fill(
                     child: Container(
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Colors.transparent, Colors.black.withOpacity(0.85)],
+                          colors: [Colors.transparent, Colors.black87],
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
+                          stops: [0.6, 1.0],
                         ),
-                      ),
-                      padding: const EdgeInsets.fromLTRB(20, 48, 20, 24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                '${profile['name']}, ${profile['age']}',
-                                style: GoogleFonts.cormorantGaramond(
-                                  color: PremiumTheme.textWhite,
-                                  fontSize: 26,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              if (profile['face_verified'] == true)
-                                const Icon(Icons.verified, color: PremiumTheme.goldAccent, size: 18),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Icon(Icons.location_on_rounded, color: PremiumTheme.goldAccent, size: 14),
-                              const SizedBox(width: 4),
-                              Text(
-                                profile['city'] ?? 'Location N/A',
-                                style: GoogleFonts.inter(color: PremiumTheme.textSilver, fontSize: 14),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              // Quick Info badge
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.white12,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  profile['family_details']?['star'] ?? 'Star N/A',
-                                  style: GoogleFonts.inter(color: PremiumTheme.goldAccent, fontSize: 11, fontWeight: FontWeight.bold),
-                                ),
-                              ),
-
-                              // Quick Details sheet trigger
-                              TextButton(
-                                onPressed: () => _showDetailsSheet(profile),
-                                child: Text(
-                                  'View Profile Info',
-                                  style: GoogleFonts.inter(color: PremiumTheme.goldLight, fontWeight: FontWeight.bold, fontSize: 13),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
                       ),
                     ),
                   ),
 
-                  // Indicator bars
+                  // Photo index dots
                   if (photos.length > 1)
                     Positioned(
                       top: 16,
@@ -800,7 +749,7 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
                               height: 3,
                               margin: const EdgeInsets.symmetric(horizontal: 2.0),
                               decoration: BoxDecoration(
-                                color: idx == photoIdx ? PremiumTheme.goldAccent : Colors.white24,
+                                color: idx == photoIdx ? Colors.white : Colors.white24,
                                 borderRadius: BorderRadius.circular(1.5),
                               ),
                             ),
@@ -808,6 +757,71 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
                         }),
                       ),
                     ),
+
+                  // Profile info overlay
+                  Positioned(
+                    left: 20,
+                    bottom: 20,
+                    right: 20,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              '${profile['name']}, ${profile['age']}',
+                              style: GoogleFonts.inter(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            if (profile['face_verified'] == true)
+                              const Icon(Icons.verified, color: Colors.white, size: 18),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on_rounded, color: Colors.white70, size: 14),
+                            const SizedBox(width: 4),
+                            Text(
+                              profile['city'] ?? 'Location N/A',
+                              style: GoogleFonts.inter(color: Colors.white70, fontSize: 14),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.black45,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.white24),
+                              ),
+                              child: Text(
+                                profile['family_details']?['star'] ?? 'Star N/A',
+                                style: GoogleFonts.inter(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+
+                            TextButton(
+                              onPressed: () => _showDetailsSheet(profile),
+                              child: Text(
+                                'View Profile Info',
+                                style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -868,7 +882,7 @@ class _PulsingHeartAnimationState extends State<PulsingHeartAnimation>
         scale: _scaleAnimation,
         child: const Icon(
           Icons.favorite_rounded,
-          color: PremiumTheme.crimsonRed,
+          color: Colors.white,
           size: 110,
           shadows: [
             Shadow(color: Colors.black54, blurRadius: 15, offset: Offset(0, 4)),
@@ -878,3 +892,4 @@ class _PulsingHeartAnimationState extends State<PulsingHeartAnimation>
     );
   }
 }
+

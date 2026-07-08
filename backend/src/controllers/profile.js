@@ -184,13 +184,9 @@ exports.searchProfiles = async (req, res) => {
       return res.status(400).json({ error: 'Please create your profile first.' });
     }
 
-    const { gender, interested_in } = currentUser;
-
     let whereClause = {
       id: { not: userId },
-      is_onboarded: 1,
-      gender: interested_in,
-      interested_in: gender
+      is_onboarded: 1
     };
 
     if (query && query.trim() !== '') {

@@ -2,70 +2,67 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class PremiumTheme {
-  // Premium Color Palette
-  static const Color primaryBgDark = Color(0xFF1C0006);
-  static const Color primaryBgBlack = Color(0xFF0A0002);
-  static const Color surfaceCard = Color(0xFF1E1215);
-  static const Color goldAccent = Color(0xFFD4AF37);
-  static const Color goldLight = Color(0xFFF3E5AB);
-  static const Color crimsonRed = Color(0xFFE63946);
-  static const Color activeBlue = Color(0xFF0071E3);
-  static const Color textWhite = Color(0xFFFFFFFF);
-  static const Color textSilver = Color(0xFFD1D1D6);
-  static const Color textMuted = Color(0xFF8E8E93);
+  // Pure Apple Style Light Color Palette (Pure White background, Black fonts/borders)
+  static const Color primaryBgLight = Color(0xFFFFFFFF);
+  static const Color primaryBgDark = Color(0xFFFFFFFF); 
+  static const Color primaryBgBlack = Color(0xFFFFFFFF); 
+  static const Color surfaceCard = Color(0xFFFFFFFF);
+  static const Color goldAccent = Color(0xFF000000); // Black accent
+  static const Color goldLight = Color(0xFFE5E5EA); // Apple Light Gray border/accent
+  static const Color crimsonRed = Color(0xFF000000); // Black highlights
+  static const Color activeBlue = Color(0xFF000000); // Black action triggers
+  static const Color textWhite = Color(0xFF000000); // Pure Black text
+  static const Color textSilver = Color(0xFF1C1C1E); // Very dark gray body text
+  static const Color textMuted = Color(0xFF8E8E93); // Muted gray text
 
-  // Linear Gradient for premium surfaces
   static const LinearGradient premiumGradient = LinearGradient(
-    colors: [primaryBgDark, primaryBgBlack],
+    colors: [primaryBgLight, primaryBgLight],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
 
   static const LinearGradient goldGradient = LinearGradient(
-    colors: [goldAccent, goldLight],
+    colors: [goldAccent, goldAccent],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient buttonGradient = LinearGradient(
-    colors: [crimsonRed, Color(0xFF9E0B20)],
+    colors: [goldAccent, goldAccent],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  // Theme Data mapping
-  static ThemeData get darkTheme {
+  static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
-      scaffoldBackgroundColor: primaryBgBlack,
+      brightness: Brightness.light,
+      scaffoldBackgroundColor: primaryBgLight,
       primaryColor: goldAccent,
       cardColor: surfaceCard,
-      colorScheme: const ColorScheme.dark(
+      colorScheme: const ColorScheme.light(
         primary: goldAccent,
         secondary: crimsonRed,
         surface: surfaceCard,
         error: crimsonRed,
       ),
       textTheme: TextTheme(
-        // Serif Headers
-        displayLarge: GoogleFonts.cormorantGaramond(
-          fontSize: 36,
+        displayLarge: GoogleFonts.inter(
+          fontSize: 32,
           fontWeight: FontWeight.bold,
           color: textWhite,
         ),
-        displayMedium: GoogleFonts.cormorantGaramond(
-          fontSize: 28,
+        displayMedium: GoogleFonts.inter(
+          fontSize: 26,
           fontWeight: FontWeight.bold,
           color: textWhite,
         ),
-        titleLarge: GoogleFonts.cormorantGaramond(
-          fontSize: 22,
+        titleLarge: GoogleFonts.inter(
+          fontSize: 20,
           fontWeight: FontWeight.bold,
           color: textWhite,
           letterSpacing: 0.5,
         ),
-        // Sans-Serif body/labels
         bodyLarge: GoogleFonts.inter(
           fontSize: 16,
           color: textSilver,
@@ -74,29 +71,29 @@ class PremiumTheme {
           fontSize: 14,
           color: textSilver,
         ),
-        labelLarge: GoogleFonts.outfit(
+        labelLarge: GoogleFonts.inter(
           fontSize: 15,
           fontWeight: FontWeight.w600,
-          color: textWhite,
+          color: primaryBgLight, // White text on black button
         ),
-        labelMedium: GoogleFonts.outfit(
+        labelMedium: GoogleFonts.inter(
           fontSize: 12,
           color: textMuted,
         ),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: Colors.transparent,
+        backgroundColor: primaryBgLight,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: GoogleFonts.cormorantGaramond(
-          fontSize: 24,
+        titleTextStyle: GoogleFonts.inter(
+          fontSize: 20,
           fontWeight: FontWeight.bold,
           color: textWhite,
         ),
         iconTheme: const IconThemeData(color: textWhite),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: primaryBgBlack,
+        backgroundColor: primaryBgLight,
         selectedItemColor: goldAccent,
         unselectedItemColor: textMuted,
         showSelectedLabels: true,
@@ -105,4 +102,7 @@ class PremiumTheme {
       ),
     );
   }
+
+  // Backwards compatibility getter
+  static ThemeData get darkTheme => lightTheme;
 }
