@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model chats {
+  id          String    @id
+  sender_id   String?
+  receiver_id String?
+  message     String
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model interests {
+  id                String    @id
+  sender_id         String?
+  receiver_id       String?
+  status            String?   @default("pending")
+  created_at        DateTime? @default(now()) @db.Timestamp(6)
+  interaction_type  String?   @default("standard")
+  attached_message  String?
+  sender_unlocked   Int?      @default(0)
+  receiver_unlocked Int?      @default(0)
+  is_refunded       Int?      @default(0)
+  accepted_at       DateTime? @db.Timestamp(6)
+  astro_unlocked    Int?      @default(0)
+
+  @@unique([sender_id, receiver_id])
+}
+
+model phone_unlocks {
+  id               String    @id
+  unlocker_id      String
+  unlocked_user_id String
+  created_at       DateTime? @default(now()) @db.Timestamp(6)
+
+  @@unique([unlocker_id, unlocked_user_id])
+}
+
+model rose_transactions {
+  id               String    @id
+  user_id          String?
+  amount           Int?
+  transaction_type String?
+  description      String?
+  created_at       DateTime? @default(now()) @db.Timestamp(6)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model users {
+  id                String    @id
+  phone_number      String    @unique
+  name              String?
+  age               Int?
+  dob               String?
+  place             String?
+  gender            String?
+  interested_in     String?
+  photos            String?   @default("[]")
+  is_onboarded      Int?      @default(0)
+  aadhaar_verified  Boolean?  @default(false)
+  face_verified     Boolean?  @default(false)
+  created_at        DateTime? @default(now()) @db.Timestamp(6)
+  roses_balance     Int?      @default(0)
+  referral_code     String?   @unique
+  referred_by       String?
+  last_free_rose_at DateTime? @db.Timestamp(6)
+  family_details    String?   @default("{}")
+  email             String?   @unique
+  tob               String?
+  pob               String?
+  phone_visible     Boolean?  @default(false)
+  is_mock           Boolean?  @default(false)
+}
