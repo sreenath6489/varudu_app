@@ -418,6 +418,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     Future.microtask(() {
       final auth = ref.read(authProvider);
       if (auth.profile != null) {
+        // Guarantee socket initialization when entering the room
+        ref.read(chatProvider.notifier).initSocket(auth.profile!['id']);
+        
         final partnerId = partner['id'];
         final isUnlocked = widget.matchItem['is_unlocked'] == true || widget.matchItem['is_unlocked'] == 1;
         if (partnerId != null && isUnlocked) {

@@ -136,7 +136,15 @@ class ChatNotifier extends StateNotifier<ChatState> {
 
   // Socket initialization
   void initSocket(String userId) {
-    if (_socket != null) return;
+    if (_socket != null) {
+      if (_socket!.connected) {
+        _socket!.emit('join', userId);
+      } else {
+        _socket!.connect();
+        _socket!.emit('join', userId);
+      }
+      return;
+    }
 
     try {
       _socket = IO.io(ApiService.baseUrl, IO.OptionBuilder()
