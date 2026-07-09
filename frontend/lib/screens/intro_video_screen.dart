@@ -44,9 +44,11 @@ class _IntroVideoScreenState extends State<IntroVideoScreen> {
   }
 
   void _videoListener() {
-    if (_controller != null &&
-        _controller!.value.position >= _controller!.value.duration) {
-      _proceedToApp();
+    if (_controller != null && _controller!.value.isInitialized) {
+      final value = _controller!.value;
+      if (value.duration > Duration.zero && value.position >= value.duration) {
+        _proceedToApp();
+      }
     }
   }
 
