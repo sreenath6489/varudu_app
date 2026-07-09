@@ -658,40 +658,48 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                       // Message input bar
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: PremiumTheme.surfaceCard,
-                          border: Border(top: BorderSide(color: Colors.grey.shade900)),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          border: Border(top: BorderSide(color: Color(0xFFE5E5EA))),
                         ),
                         child: Row(
                           children: [
                             // Add attachments
                             IconButton(
-                              icon: const Icon(Icons.add_photo_alternate_outlined, color: PremiumTheme.goldAccent),
+                              icon: const Icon(Icons.add_photo_alternate_outlined, color: Colors.black87),
                               onPressed: _sendImageAttachment,
                             ),
 
                             // Text field
                             Expanded(
-                              child: TextField(
-                                controller: _msgController,
-                                style: const TextStyle(color: Colors.white),
-                                onChanged: (val) {
-                                  if (authState.profile != null) {
-                                    ref.read(chatProvider.notifier).sendTypingIndicator(
-                                      authState.profile!['id'],
-                                      partner['id'],
-                                      val.trim().isNotEmpty,
-                                    );
-                                  }
-                                },
-                                decoration: InputDecoration(
-                                  hintText: 'Type your message...',
-                                  hintStyle: const TextStyle(color: PremiumTheme.textMuted),
-                                  border: InputBorder.none,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF2F2F7),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                child: TextField(
+                                  controller: _msgController,
+                                  style: const TextStyle(color: Colors.black),
+                                  onChanged: (val) {
+                                    if (authState.profile != null) {
+                                      ref.read(chatProvider.notifier).sendTypingIndicator(
+                                        authState.profile!['id'],
+                                        partner['id'],
+                                        val.trim().isNotEmpty,
+                                      );
+                                    }
+                                  },
+                                  decoration: const InputDecoration(
+                                    hintText: 'Type your message...',
+                                    hintStyle: TextStyle(color: Colors.black38),
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.symmetric(vertical: 10),
+                                  ),
                                 ),
                               ),
                             ),
+                            const SizedBox(width: 8),
 
                             // Hold down Mic Voice notes or send standard text button
                             _msgController.text.trim().isEmpty
@@ -699,16 +707,16 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                                     onLongPressStart: (_) => _startMockRecording(),
                                     onLongPressEnd: (_) => _stopAndSendRecording(),
                                     child: Container(
-                                      padding: const EdgeInsets.all(12),
+                                      padding: const EdgeInsets.all(10),
                                       decoration: const BoxDecoration(
-                                        color: Colors.white10,
+                                        color: Color(0xFFF2F2F7),
                                         shape: BoxShape.circle,
                                       ),
-                                      child: const Icon(Icons.mic, color: PremiumTheme.goldAccent),
+                                      child: const Icon(Icons.mic, color: Colors.black87),
                                     ),
                                   )
                                 : IconButton(
-                                    icon: const Icon(Icons.send_rounded, color: PremiumTheme.goldAccent),
+                                    icon: const Icon(Icons.send_rounded, color: Colors.black87),
                                     onPressed: _sendMessage,
                                   ),
                           ],
@@ -919,7 +927,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isMe ? PremiumTheme.goldAccent : Colors.grey.shade900,
+          color: isMe ? Colors.black : Colors.grey.shade800,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
@@ -935,7 +943,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
             Text(
               text,
               style: GoogleFonts.inter(
-                color: isMe ? PremiumTheme.primaryBgBlack : PremiumTheme.textWhite,
+                color: Colors.white,
                 fontSize: 14,
                 fontWeight: isMe ? FontWeight.w600 : FontWeight.normal,
               ),
@@ -947,15 +955,15 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
               children: [
                 Text(
                   '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 9,
-                    color: isMe ? Colors.black54 : PremiumTheme.textMuted,
+                    color: Colors.white60,
                   ),
                 ),
                 if (isMe)
                   const Padding(
                     padding: EdgeInsets.only(left: 4.0),
-                    child: Icon(Icons.done_all, size: 10, color: Colors.black54),
+                    child: Icon(Icons.done_all, size: 10, color: Colors.white70),
                   )
               ],
             )
@@ -1172,26 +1180,35 @@ class _ChatbotConsoleSheetState extends ConsumerState<ChatbotConsoleSheet> {
             // Input console bar
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: PremiumTheme.surfaceCard,
-                border: Border(top: BorderSide(color: Colors.grey.shade900)),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(top: BorderSide(color: Color(0xFFE5E5EA))),
               ),
               child: Row(
                 children: [
                   Expanded(
-                    child: TextField(
-                      controller: _inputController,
-                      style: const TextStyle(color: Colors.white),
-                      onSubmitted: (_) => _sendPrompt(),
-                      decoration: InputDecoration(
-                        hintText: 'Search city, star alignment (e.g. "Tirupati")...',
-                        hintStyle: const TextStyle(color: PremiumTheme.textMuted),
-                        border: InputBorder.none,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF2F2F7),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: TextField(
+                        controller: _inputController,
+                        style: const TextStyle(color: Colors.black),
+                        onSubmitted: (_) => _sendPrompt(),
+                        decoration: const InputDecoration(
+                          hintText: 'Search city, star alignment (e.g. "Tirupati")...',
+                          hintStyle: TextStyle(color: Colors.black38),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(vertical: 10),
+                        ),
                       ),
                     ),
                   ),
+                  const SizedBox(width: 8),
                   IconButton(
-                    icon: const Icon(Icons.send_rounded, color: PremiumTheme.goldAccent),
+                    icon: const Icon(Icons.send_rounded, color: Colors.black87),
                     onPressed: _sendPrompt,
                   ),
                 ],
