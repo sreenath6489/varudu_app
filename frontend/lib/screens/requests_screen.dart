@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/requests_provider.dart';
+import '../providers/chat_provider.dart';
 import '../services/api_service.dart';
 import '../theme/premium_theme.dart';
 
@@ -30,14 +31,56 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen> with SingleTick
   }
 
   Future<void> _accept(String id) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: PremiumTheme.surfaceCard,
+          title: Text(
+            'Accept Connection Request',
+            style: GoogleFonts.cormorantGaramond(
+              fontWeight: FontWeight.bold,
+              color: PremiumTheme.textWhite,
+              fontSize: 22,
+            ),
+          ),
+          content: Text(
+            'Accepting this request will deduct 1 Rose to unlock your side of the chat. Do you want to proceed?',
+            style: GoogleFonts.inter(color: PremiumTheme.textSilver, fontSize: 14),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text('Cancel', style: GoogleFonts.inter(color: PremiumTheme.textMuted)),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: PremiumTheme.goldAccent,
+                foregroundColor: PremiumTheme.primaryBgBlack,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: Text('Spend 1 Rose', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm != true) return;
+
     try {
       await ref.read(requestsProvider.notifier).accept(id);
+      
+      // Refresh matches list
+      ref.read(chatProvider.notifier).fetchMatches();
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Accepted match request! 🌹'), backgroundColor: PremiumTheme.goldAccent),
+        const SnackBar(content: Text('Accepted match request and unlocked your side! 🌹'), backgroundColor: PremiumTheme.goldAccent),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString()), backgroundColor: PremiumTheme.crimsonRed),
+        SnackBar(content: Text(e.toString().replaceAll('Exception: ', '')), backgroundColor: PremiumTheme.crimsonRed),
       );
     }
   }

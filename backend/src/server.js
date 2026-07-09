@@ -72,6 +72,8 @@ app.get('/api/interests/requests', authMiddleware, interestController.getRequest
 app.post('/api/interests/accept', authMiddleware, interestController.acceptInterest);
 app.post('/api/interests/decline', authMiddleware, interestController.declineInterest);
 app.post('/api/interests/withdraw', authMiddleware, interestController.withdrawInterest);
+app.get('/api/interests/matches', authMiddleware, interestController.getMatches);
+app.post('/api/interests/unlock', authMiddleware, interestController.unlockChat);
 
 // 5. Roses / Boutique routes (Authenticated)
 app.get('/api/roses/balance', authMiddleware, rosesController.getBalance);
@@ -135,6 +137,29 @@ io.on('connection', (socket) => {
     } catch (error) {
       console.error('Error saving chat message to database:', error);
     }
+  });
+
+  // Calling signaling
+  socket.on('call-dial', ({ senderId, receiverId, senderName, senderPhoto }) => {
+    console.log(`Dialing call: ${senderId} to ${receiverId}`);
+    io.to(String(receiverId)).emit('incoming-call', { senderId, senderName, senderPhoto });
+  });
+
+  socket.on('call-accept', ({ senderId, receiverId }) => {
+    console.log(`Call accepted: ${senderId} by ${receiverId}`);
+    io.to(String(senderId)).emit('call-connected', { receiverId });
+  });
+
+  socket.on('call-reject', ({ senderId, receiverId }) => {
+    console.log(`Call rejected: ${senderId} by ${receiverId}`);
+    io.to(String(senderId)).emit('call-rejected', { receiverId });
+    io.to(String(receiverId)).emit('call-rejected', { senderId });
+  });
+
+  socket.on('call-end', ({ senderId, receiverId }) => {
+    console.log(`Call ended between ${senderId} and ${receiverId}`);
+    io.to(String(receiverId)).emit('call-terminated', { senderId });
+    io.to(String(senderId)).emit('call-terminated', { receiverId });
   });
 
   socket.on('disconnect', () => {

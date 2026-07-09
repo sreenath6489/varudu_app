@@ -39,6 +39,7 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
   // Double-tap heart animation states
   bool _showHeartPop = false;
   String _activeHeartProfileId = '';
+  Offset _lastTapPosition = Offset.zero;
 
   @override
   void initState() {
@@ -563,34 +564,39 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
                 children: [
                   // Expanded full screen photo image
                   Positioned.fill(
-                    child: GestureDetector(
-                      onTapDown: (details) {
-                        final cardWidth = MediaQuery.of(context).size.width;
-                        final tapX = details.localPosition.dx;
-                        if (tapX < cardWidth * 0.33) {
-                          _setPhotoIndex(profile['id'], photoIdx - 1, photos.length);
-                        } else {
-                          _setPhotoIndex(profile['id'], photoIdx + 1, photos.length);
-                        }
+                    child: Listener(
+                      onPointerDown: (event) {
+                        _lastTapPosition = event.localPosition;
                       },
-                      onDoubleTap: () {
-                        setState(() {
-                          _activeHeartProfileId = profile['id'];
-                          _showHeartPop = true;
-                        });
-                        _handleSwipeAction(profile['id'], 'accepted');
-                        Future.delayed(const Duration(milliseconds: 800), () {
-                          if (mounted) setState(() => _showHeartPop = false);
-                        });
-                      },
-                      child: hasPhotos
-                          ? CachedNetworkImage(
-                              imageUrl: activePhotoUrl,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => const Center(child: CircularProgressIndicator(color: Colors.black)),
-                              errorWidget: (context, url, err) => _buildReelsPlaceholder(),
-                            )
-                          : _buildReelsPlaceholder(),
+                      child: GestureDetector(
+                        onTap: () {
+                          final cardWidth = MediaQuery.of(context).size.width;
+                          final tapX = _lastTapPosition.dx;
+                          if (tapX < cardWidth * 0.33) {
+                            _setPhotoIndex(profile['id'], photoIdx - 1, photos.length);
+                          } else {
+                            _setPhotoIndex(profile['id'], photoIdx + 1, photos.length);
+                          }
+                        },
+                        onDoubleTap: () {
+                          setState(() {
+                            _activeHeartProfileId = profile['id'];
+                            _showHeartPop = true;
+                          });
+                          _handleSwipeAction(profile['id'], 'accepted');
+                          Future.delayed(const Duration(milliseconds: 800), () {
+                            if (mounted) setState(() => _showHeartPop = false);
+                          });
+                        },
+                        child: hasPhotos
+                            ? CachedNetworkImage(
+                                imageUrl: activePhotoUrl,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => const Center(child: CircularProgressIndicator(color: Colors.black)),
+                                errorWidget: (context, url, err) => _buildReelsPlaceholder(),
+                              )
+                            : _buildReelsPlaceholder(),
+                      ),
                     ),
                   ),
 

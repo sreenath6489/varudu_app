@@ -6,14 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   static String get baseUrl {
-    if (kIsWeb) {
-      return 'http://localhost:3001';
-    }
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      // Use 10.0.2.2 for Android Emulator, fallback to localhost
-      return 'http://10.0.2.2:3001';
-    }
-    return 'http://localhost:3001';
+    // Expose backend publicly via ngrok for testing on physical devices and emulator
+    return 'https://rocklike-cylinder-countless.ngrok-free.dev';
   }
 
   String? _token;
@@ -348,6 +342,47 @@ class ApiService {
       return data;
     } else {
       throw Exception(data['error'] ?? 'Failed to withdraw interest');
+    }
+  }
+
+  // Get all matched connections with unlock metadata
+  Future<List<dynamic>> getMatches() async {
+    if (_token == null) throw Exception('Not authenticated');
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/interests/matches'),
+      headers: {
+        'Authorization': 'Bearer $_token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      return data as List<dynamic>;
+    } else {
+      throw Exception(data['error'] ?? 'Failed to fetch matches');
+    }
+  }
+
+  // Unlock chat by spending 1 rose
+  Future<Map<String, dynamic>> unlockChat(String interestId) async {
+    if (_token == null) throw Exception('Not authenticated');
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/interests/unlock'),
+      headers: {
+        'Authorization': 'Bearer $_token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'interestId': interestId}),
+    );
+
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      return data;
+    } else {
+      throw Exception(data['error'] ?? 'Failed to unlock chat');
     }
   }
 

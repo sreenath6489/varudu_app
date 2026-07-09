@@ -51,6 +51,14 @@ class ChatState {
   final bool isTyping;
   final String typingUser;
 
+  // Calling state
+  final bool isInCall;
+  final bool isIncomingCall;
+  final String? callPartnerId;
+  final String? callPartnerName;
+  final String? callPartnerPhoto;
+  final String? callStatus; // 'dialing', 'ringing', 'connected', 'disconnected'
+
   ChatState({
     required this.matches,
     required this.activeMessages,
@@ -58,6 +66,12 @@ class ChatState {
     required this.isLoading,
     required this.isTyping,
     required this.typingUser,
+    this.isInCall = false,
+    this.isIncomingCall = false,
+    this.callPartnerId,
+    this.callPartnerName,
+    this.callPartnerPhoto,
+    this.callStatus,
   });
 
   factory ChatState.initial() => ChatState(
@@ -72,6 +86,8 @@ class ChatState {
         isLoading: false,
         isTyping: false,
         typingUser: '',
+        isInCall: false,
+        isIncomingCall: false,
       );
 
   ChatState copyWith({
@@ -81,6 +97,12 @@ class ChatState {
     bool? isLoading,
     bool? isTyping,
     String? typingUser,
+    bool? isInCall,
+    bool? isIncomingCall,
+    String? callPartnerId,
+    String? callPartnerName,
+    String? callPartnerPhoto,
+    String? callStatus,
   }) {
     return ChatState(
       matches: matches ?? this.matches,
@@ -89,6 +111,12 @@ class ChatState {
       isLoading: isLoading ?? this.isLoading,
       isTyping: isTyping ?? this.isTyping,
       typingUser: typingUser ?? this.typingUser,
+      isInCall: isInCall ?? this.isInCall,
+      isIncomingCall: isIncomingCall ?? this.isIncomingCall,
+      callPartnerId: callPartnerId ?? this.callPartnerId,
+      callPartnerName: callPartnerName ?? this.callPartnerName,
+      callPartnerPhoto: callPartnerPhoto ?? this.callPartnerPhoto,
+      callStatus: callStatus ?? this.callStatus,
     );
   }
 }
@@ -138,6 +166,40 @@ class ChatNotifier extends StateNotifier<ChatState> {
         );
       });
 
+      // Handle call signaling events
+      _socket!.on('incoming-call', (data) {
+        state = state.copyWith(
+          isInCall: true,
+          isIncomingCall: true,
+          callPartnerId: data['senderId'],
+          callPartnerName: data['senderName'],
+          callPartnerPhoto: data['senderPhoto'],
+          callStatus: 'ringing',
+        );
+      });
+
+      _socket!.on('call-connected', (data) {
+        state = state.copyWith(
+          callStatus: 'connected',
+        );
+      });
+
+      _socket!.on('call-rejected', (data) {
+        state = state.copyWith(
+          callStatus: 'disconnected',
+          isInCall: false,
+          isIncomingCall: false,
+        );
+      });
+
+      _socket!.on('call-terminated', (data) {
+        state = state.copyWith(
+          callStatus: 'disconnected',
+          isInCall: false,
+          isIncomingCall: false,
+        );
+      });
+
       _socket!.onDisconnect((_) => print('Socket client disconnected'));
     } catch (e) {
       print('Socket connection error: $e');
@@ -149,32 +211,87 @@ class ChatNotifier extends StateNotifier<ChatState> {
     state = state.copyWith(isLoading: true);
     try {
       final apiService = _ref.read(apiServiceProvider);
-      
-      // Matches are users with status accepted in requests
-      final requests = await apiService.getRequests();
-      final sentMatches = (requests['sent'] as List<dynamic>)
-          .where((m) => m['status'] == 'accepted')
-          .map((m) => m['profile'])
-          .toList();
-
-      final receivedMatches = (requests['received'] as List<dynamic>)
-          .where((m) => m['status'] == 'accepted')
-          .map((m) => m['profile'])
-          .toList();
-
-      // Deduplicate profiles
-      final allMatches = [...sentMatches, ...receivedMatches];
-      final uniqueIds = <String>{};
-      final uniqueMatches = allMatches.where((profile) {
-        if (profile == null) return false;
-        final id = profile['id'];
-        return uniqueIds.add(id);
-      }).toList();
-
-      state = state.copyWith(matches: uniqueMatches, isLoading: false);
+      final matchesData = await apiService.getMatches();
+      state = state.copyWith(matches: matchesData, isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false);
     }
+  }
+
+  // Unlock a match chat by spending 1 rose
+  Future<void> unlockMatch(String interestId) async {
+    state = state.copyWith(isLoading: true);
+    try {
+      final apiService = _ref.read(apiServiceProvider);
+      await apiService.unlockChat(interestId);
+      // Reload matches to reflect updated unlock status
+      await fetchMatches();
+    } catch (e) {
+      state = state.copyWith(isLoading: false);
+      rethrow;
+    }
+  }
+
+  // Calling actions
+  void dialCall({
+    required String senderId,
+    required String receiverId,
+    required String senderName,
+    required String senderPhoto,
+  }) {
+    if (_socket == null) return;
+    state = state.copyWith(
+      isInCall: true,
+      isIncomingCall: false,
+      callPartnerId: receiverId,
+      callPartnerName: senderName,
+      callPartnerPhoto: senderPhoto,
+      callStatus: 'dialing',
+    );
+    _socket!.emit('call-dial', {
+      'senderId': senderId,
+      'receiverId': receiverId,
+      'senderName': senderName,
+      'senderPhoto': senderPhoto,
+    });
+  }
+
+  void acceptCall(String senderId, String receiverId) {
+    if (_socket == null) return;
+    state = state.copyWith(
+      isIncomingCall: false,
+      callStatus: 'connected',
+    );
+    _socket!.emit('call-accept', {
+      'senderId': senderId,
+      'receiverId': receiverId,
+    });
+  }
+
+  void rejectCall(String senderId, String receiverId) {
+    if (_socket == null) return;
+    state = state.copyWith(
+      isInCall: false,
+      isIncomingCall: false,
+      callStatus: 'disconnected',
+    );
+    _socket!.emit('call-reject', {
+      'senderId': senderId,
+      'receiverId': receiverId,
+    });
+  }
+
+  void endCall(String senderId, String receiverId) {
+    if (_socket == null) return;
+    state = state.copyWith(
+      isInCall: false,
+      isIncomingCall: false,
+      callStatus: 'disconnected',
+    );
+    _socket!.emit('call-end', {
+      'senderId': senderId,
+      'receiverId': receiverId,
+    });
   }
 
   // Load Chat Logs
