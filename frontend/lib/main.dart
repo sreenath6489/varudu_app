@@ -6,6 +6,7 @@ import 'screens/login_screen.dart';
 import 'screens/otp_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/intro_video_screen.dart';
 import 'theme/premium_theme.dart';
 
 void main() {
@@ -25,7 +26,7 @@ class MatrimonyApp extends StatelessWidget {
       title: 'Varudu Matrimony',
       debugShowCheckedModeBanner: false,
       theme: PremiumTheme.lightTheme,
-      home: const AuthWrapper(),
+      home: const IntroVideoScreen(),
     );
   }
 }
