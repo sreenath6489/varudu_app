@@ -11,6 +11,7 @@ import '../theme/premium_theme.dart';
 import 'call_history_screen.dart';
 import 'astro_match_screen.dart';
 import 'rose_boutique_screen.dart';
+import 'requests_screen.dart';
 import '../widgets/aesthetic_background.dart';
 import '../widgets/glassmorphic_container.dart';
 
@@ -105,7 +106,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const RequestsScreen()),
+                              MaterialPageRoute(builder: (context) => RequestsScreen()),
                             );
                           },
                           child: Container(

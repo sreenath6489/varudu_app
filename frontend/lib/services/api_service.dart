@@ -85,13 +85,17 @@ class ApiService {
   }
 
   // Request OTP
-  Future<Map<String, dynamic>> sendOtp(String email) async {
+  Future<Map<String, dynamic>> sendOtp(String emailOrPhone) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/api/auth/send-otp'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email}),
-      ).timeout(const Duration(seconds: 15));
+        body: jsonEncode({
+          'email': emailOrPhone,
+          'phone': emailOrPhone,
+          'phoneNumber': emailOrPhone,
+        }),
+      ).timeout(const Duration(seconds: 8));
       return _handleResponse(response, defaultError: 'Failed to send OTP') as Map<String, dynamic>;
     } catch (e) {
       if (e.toString().contains('SocketException') || e.toString().contains('Connection failed') || e.toString().contains('TimeoutException')) {
@@ -102,13 +106,18 @@ class ApiService {
   }
 
   // Verify OTP
-  Future<Map<String, dynamic>> verifyOtp(String email, String otp) async {
+  Future<Map<String, dynamic>> verifyOtp(String emailOrPhone, String otp) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/api/auth/verify-otp'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'otp': otp}),
-      ).timeout(const Duration(seconds: 15));
+        body: jsonEncode({
+          'email': emailOrPhone,
+          'phone': emailOrPhone,
+          'phoneNumber': emailOrPhone,
+          'otp': otp,
+        }),
+      ).timeout(const Duration(seconds: 8));
 
       final data = _handleResponse(response, defaultError: 'Failed to verify OTP') as Map<String, dynamic>;
       final token = data['token'];

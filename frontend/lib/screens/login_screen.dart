@@ -108,16 +108,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _bypassLogin() {
-    if (_emailController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter any email or phone number for bypass mode.'),
-          backgroundColor: PremiumTheme.crimsonRed,
-        ),
-      );
-      return;
-    }
-    ref.read(authProvider.notifier).bypassAuth(_emailController.text.trim());
+    final input = _emailController.text.trim().isNotEmpty
+        ? _emailController.text.trim()
+        : '9876543210';
+    ref.read(authProvider.notifier).bypassAuth(input);
   }
 
   @override

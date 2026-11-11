@@ -159,28 +159,42 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                                           ),
                                           const SizedBox(height: 24),
 
-                                          // Mock verification banner
-                                          Container(
-                                            width: double.infinity,
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 14,
-                                              vertical: 10,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: PremiumTheme.textWhite.withOpacity(0.03),
-                                              borderRadius: BorderRadius.circular(10),
-                                              border: Border.all(
-                                                color: PremiumTheme.textWhite.withOpacity(0.05),
+                                          // Mock verification banner (one-tap autofill)
+                                          InkWell(
+                                            onTap: () {
+                                              _otpController.text = '1234';
+                                              _submit();
+                                            },
+                                            borderRadius: BorderRadius.circular(10),
+                                            child: Container(
+                                              width: double.infinity,
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 14,
+                                                vertical: 10,
                                               ),
-                                            ),
-                                            child: Text(
-                                              'For testing, enter code: 1234',
-                                              textAlign: TextAlign.center,
-                                              style: GoogleFonts.hankenGrotesk(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w800,
-                                                color: PremiumTheme.textWhite.withOpacity(0.7),
-                                                letterSpacing: 0.5,
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFFAF6F0),
+                                                borderRadius: BorderRadius.circular(10),
+                                                border: Border.all(
+                                                  color: PremiumTheme.goldBorder,
+                                                ),
+                                              ),
+                                              child: Row(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  const Icon(Icons.touch_app_rounded, size: 16, color: PremiumTheme.darkEspresso),
+                                                  const SizedBox(width: 8),
+                                                  Text(
+                                                    'Tap to autofill 1234 & verify',
+                                                    textAlign: TextAlign.center,
+                                                    style: GoogleFonts.inter(
+                                                      fontSize: 12,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: PremiumTheme.darkEspresso,
+                                                      letterSpacing: 0.3,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                           ),

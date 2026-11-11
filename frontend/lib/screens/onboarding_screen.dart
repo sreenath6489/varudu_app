@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import '../providers/auth_provider.dart';
 import '../theme/premium_theme.dart';
+import '../widgets/aesthetic_background.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -26,7 +27,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   String _selectedGender = 'MAN';
   String _selectedInterestedIn = 'WOMAN';
 
-  // Primary photo
+  // Primary photo (optional)
   File? _selectedPhoto;
   final ImagePicker _imagePicker = ImagePicker();
 
@@ -38,7 +39,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     super.dispose();
   }
 
-  // Pick DOB
+  // Pick DOB with Light Theme
   Future<void> _selectDob(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -47,11 +48,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       lastDate: DateTime.now().subtract(const Duration(days: 365 * 18)),
       builder: (context, child) {
         return Theme(
-          data: ThemeData.dark().copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: PremiumTheme.goldAccent,
-              onPrimary: PremiumTheme.primaryBgBlack,
-              surface: PremiumTheme.surfaceCard,
+          data: ThemeData.light().copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: PremiumTheme.darkEspresso,
+              onPrimary: Colors.white,
+              surface: Colors.white,
               onSurface: PremiumTheme.textWhite,
             ),
           ),
@@ -95,10 +96,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       _showSnackBar('Please select your Date of Birth.');
       return;
     }
-    if (_selectedPhoto == null) {
-      _showSnackBar('Please upload a profile photo.');
-      return;
-    }
 
     final today = DateTime.now();
     int age = today.year - _selectedDob!.year;
@@ -114,7 +111,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           dob: _selectedDob!,
           gender: _selectedGender,
           interestedIn: _selectedInterestedIn,
-          photos: [_selectedPhoto!],
+          photos: _selectedPhoto != null ? [_selectedPhoto!] : null,
         );
   }
 
@@ -130,162 +127,224 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final isLoading = authState.status == AuthStatus.loading;
 
     return Scaffold(
-      backgroundColor: PremiumTheme.primaryBgBlack,
-      appBar: AppBar(
-        title: Text(
-          'PROFILE SETUP',
-          style: GoogleFonts.cormorantGaramond(fontWeight: FontWeight.bold, color: PremiumTheme.textWhite),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout_rounded, color: PremiumTheme.crimsonRed),
-            onPressed: () => ref.read(authProvider.notifier).logout(),
-          )
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Photo Picker Card
-              Center(
-                child: Column(
-                  children: [
-                    GestureDetector(
-                      onTap: _pickPhoto,
-                      child: Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: PremiumTheme.surfaceCard,
-                          border: Border.all(
-                            color: _selectedPhoto != null ? PremiumTheme.goldAccent : Colors.grey.shade800,
-                            width: 2,
-                          ),
-                        ),
-                        child: ClipOval(
-                          child: _selectedPhoto != null
-                              ? Image.file(_selectedPhoto!, fit: BoxFit.cover)
-                              : const Icon(Icons.add_a_photo_outlined, size: 36, color: PremiumTheme.goldAccent),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      _selectedPhoto == null ? 'Upload Profile Photo' : 'Change Photo',
-                      style: GoogleFonts.inter(color: PremiumTheme.textSilver, fontSize: 13),
+      backgroundColor: Colors.transparent,
+      body: AestheticBackground(
+        verticalText: 'WELCOME',
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 440),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(color: PremiumTheme.goldBorder.withOpacity(0.8)),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x144A3728),
+                      blurRadius: 24,
+                      offset: Offset(0, 8),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 32),
-
-              _buildTextField('Full Name', _nameController, Icons.person_outline_rounded),
-              const SizedBox(height: 20),
-
-              _buildTextField('Current City / Place', _cityController, Icons.location_city_outlined),
-              const SizedBox(height: 20),
-
-              // DOB selector field
-              Text(
-                'Date of Birth',
-                style: GoogleFonts.inter(fontSize: 14, color: PremiumTheme.textSilver, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _dobController,
-                readOnly: true,
-                onTap: () => _selectDob(context),
-                style: const TextStyle(color: Colors.white),
-                decoration: _buildInputDecoration('Select Date of Birth', Icons.calendar_today_outlined),
-              ),
-              const SizedBox(height: 24),
-
-              // Gender Choice
-              Text(
-                'Gender',
-                style: GoogleFonts.inter(fontSize: 14, color: PremiumTheme.textSilver, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(child: _buildChoiceButton('Man', 'MAN', _selectedGender == 'MAN', (val) => setState(() => _selectedGender = val))),
-                  const SizedBox(width: 16),
-                  Expanded(child: _buildChoiceButton('Woman', 'WOMAN', _selectedGender == 'WOMAN', (val) => setState(() => _selectedGender = val))),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              Text(
-                'Looking For',
-                style: GoogleFonts.inter(fontSize: 14, color: PremiumTheme.textSilver, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Expanded(child: _buildChoiceButton('Men', 'MAN', _selectedInterestedIn == 'MAN', (val) => setState(() => _selectedInterestedIn = val))),
-                  const SizedBox(width: 16),
-                  Expanded(child: _buildChoiceButton('Women', 'WOMAN', _selectedInterestedIn == 'WOMAN', (val) => setState(() => _selectedInterestedIn = val))),
-                ],
-              ),
-
-              const SizedBox(height: 48),
-
-              // Complete Button
-              SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(27),
-                    gradient: PremiumTheme.goldGradient,
-                  ),
-                  child: ElevatedButton(
-                    onPressed: isLoading ? null : _submitOnboarding,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(27)),
-                    ),
-                    child: isLoading
-                        ? const CircularProgressIndicator(color: PremiumTheme.primaryBgBlack)
-                        : Text(
-                            'Complete Setup',
-                            style: GoogleFonts.outfit(
-                              color: PremiumTheme.primaryBgBlack,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
+                padding: const EdgeInsets.all(28),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'CREATE PROFILE',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 1.5,
+                                  color: PremiumTheme.textSilver,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Personal Details',
+                                style: GoogleFonts.playfairDisplay(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: PremiumTheme.textWhite,
+                                ),
+                              ),
+                            ],
                           ),
+                          IconButton(
+                            icon: const Icon(Icons.logout_rounded, color: PremiumTheme.textSilver, size: 20),
+                            onPressed: () => ref.read(authProvider.notifier).logout(),
+                            tooltip: 'Logout',
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Photo Avatar Picker
+                      Center(
+                        child: Column(
+                          children: [
+                            GestureDetector(
+                              onTap: _pickPhoto,
+                              child: Stack(
+                                children: [
+                                  Container(
+                                    width: 100,
+                                    height: 100,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: const Color(0xFFFAF6F0),
+                                      border: Border.all(color: PremiumTheme.goldBorder, width: 2),
+                                    ),
+                                    child: ClipOval(
+                                      child: _selectedPhoto != null
+                                          ? Image.file(_selectedPhoto!, fit: BoxFit.cover)
+                                          : Image.asset(
+                                              'assets/sreenath.jpg',
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (c, e, s) => const Icon(
+                                                Icons.person_rounded,
+                                                size: 50,
+                                                color: PremiumTheme.darkEspresso,
+                                              ),
+                                            ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    bottom: 0,
+                                    right: 0,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: const BoxDecoration(
+                                        color: PremiumTheme.darkEspresso,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 14),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _selectedPhoto == null ? 'Tap to change photo (Optional)' : 'Photo Selected',
+                              style: GoogleFonts.inter(color: PremiumTheme.textSilver, fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+
+                      _buildTextField('Full Name', _nameController, Icons.person_outline_rounded, 'e.g. Sreenath Reddy'),
+                      const SizedBox(height: 18),
+
+                      _buildTextField('Current City / Place', _cityController, Icons.location_on_outlined, 'e.g. Hyderabad'),
+                      const SizedBox(height: 18),
+
+                      // Date of Birth
+                      Text(
+                        'Date of Birth',
+                        style: GoogleFonts.inter(fontSize: 13, color: PremiumTheme.textWhite, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 6),
+                      TextFormField(
+                        controller: _dobController,
+                        readOnly: true,
+                        onTap: () => _selectDob(context),
+                        style: GoogleFonts.inter(color: PremiumTheme.textWhite, fontSize: 14),
+                        decoration: _buildInputDecoration('Select Date of Birth', Icons.calendar_today_outlined),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Gender
+                      Text(
+                        'I Am A',
+                        style: GoogleFonts.inter(fontSize: 13, color: PremiumTheme.textWhite, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(child: _buildChoiceButton('Man', 'MAN', _selectedGender == 'MAN', (val) => setState(() => _selectedGender = val))),
+                          const SizedBox(width: 12),
+                          Expanded(child: _buildChoiceButton('Woman', 'WOMAN', _selectedGender == 'WOMAN', (val) => setState(() => _selectedGender = val))),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Looking For
+                      Text(
+                        'Looking For',
+                        style: GoogleFonts.inter(fontSize: 13, color: PremiumTheme.textWhite, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(child: _buildChoiceButton('Women', 'WOMAN', _selectedInterestedIn == 'WOMAN', (val) => setState(() => _selectedInterestedIn = val))),
+                          const SizedBox(width: 12),
+                          Expanded(child: _buildChoiceButton('Men', 'MAN', _selectedInterestedIn == 'MAN', (val) => setState(() => _selectedInterestedIn = val))),
+                        ],
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      // Submit Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: isLoading ? null : _submitOnboarding,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: PremiumTheme.darkEspresso,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                            elevation: 0,
+                          ),
+                          child: isLoading
+                              ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                              : Text(
+                                  'Complete Profile',
+                                  style: GoogleFonts.inter(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, IconData icon) {
+  Widget _buildTextField(String label, TextEditingController controller, IconData icon, String hint) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(fontSize: 14, color: PremiumTheme.textSilver, fontWeight: FontWeight.w600),
+          style: GoogleFonts.inter(fontSize: 13, color: PremiumTheme.textWhite, fontWeight: FontWeight.w600),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         TextFormField(
           controller: controller,
-          style: const TextStyle(color: Colors.white),
-          decoration: _buildInputDecoration(label, icon),
+          style: GoogleFonts.inter(color: PremiumTheme.textWhite, fontSize: 14),
+          decoration: _buildInputDecoration(hint, icon),
         ),
       ],
     );
@@ -294,41 +353,43 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   InputDecoration _buildInputDecoration(String hint, IconData icon) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: PremiumTheme.textMuted),
-      prefixIcon: Icon(icon, color: PremiumTheme.goldAccent),
+      hintStyle: GoogleFonts.inter(color: PremiumTheme.textMuted, fontSize: 13),
+      prefixIcon: Icon(icon, color: PremiumTheme.textSilver, size: 18),
       filled: true,
-      fillColor: PremiumTheme.surfaceCard,
+      fillColor: const Color(0xFFFAF6F0),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade900),
+        borderSide: const BorderSide(color: PremiumTheme.goldBorder),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: PremiumTheme.goldAccent),
+        borderSide: const BorderSide(color: PremiumTheme.darkEspresso, width: 1.5),
       ),
-      contentPadding: const EdgeInsets.symmetric(vertical: 16),
+      contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
     );
   }
 
   Widget _buildChoiceButton(String label, String value, bool isSelected, Function(String) onTap) {
     return GestureDetector(
       onTap: () => onTap(value),
-      child: Container(
-        height: 48,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        height: 44,
         decoration: BoxDecoration(
-          color: isSelected ? PremiumTheme.goldAccent.withOpacity(0.1) : PremiumTheme.surfaceCard,
+          color: isSelected ? PremiumTheme.darkEspresso : const Color(0xFFFAF6F0),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? PremiumTheme.goldAccent : Colors.grey.shade900,
-            width: 1.5,
+            color: isSelected ? PremiumTheme.darkEspresso : PremiumTheme.goldBorder,
+            width: 1.0,
           ),
         ),
         alignment: Alignment.center,
         child: Text(
           label,
-          style: GoogleFonts.outfit(
-            color: isSelected ? PremiumTheme.goldAccent : PremiumTheme.textSilver,
+          style: GoogleFonts.inter(
+            color: isSelected ? Colors.white : PremiumTheme.textSilver,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            fontSize: 13,
           ),
         ),
       ),
