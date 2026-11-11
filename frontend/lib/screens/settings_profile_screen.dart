@@ -395,48 +395,68 @@ class _SettingsProfileScreenState extends ConsumerState<SettingsProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-              // User profile header card
+              // User profile header (Exact match to Image 4)
               Center(
                 child: Column(
                   children: [
-                    Container(
-                      width: 110,
-                      height: 110,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: PremiumTheme.goldAccent, width: 2),
-                      ),
-                      child: ClipOval(
-                        child: hasPhoto
-                            ? CachedNetworkImage(
-                                imageUrl: photos[0].startsWith('http') ? photos[0] : '${ApiService.baseUrl}${photos[0]}',
-                                fit: BoxFit.cover,
-                                placeholder: (context, url) => const CircularProgressIndicator(),
-                                errorWidget: (context, url, err) => Container(color: Colors.grey.shade900),
-                              )
-                            : Container(color: Colors.grey.shade900),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    Stack(
                       children: [
-                        Text(
-                          profile['name'] ?? 'User Name',
-                          style: GoogleFonts.cormorantGaramond(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: PremiumTheme.textWhite,
+                        Container(
+                          width: 96,
+                          height: 96,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: PremiumTheme.goldBorder, width: 2),
+                          ),
+                          child: ClipOval(
+                            child: hasPhoto
+                                ? CachedNetworkImage(
+                                    imageUrl: photos[0].startsWith('http') ? photos[0] : '${ApiService.baseUrl}${photos[0]}',
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, url) => const CircularProgressIndicator(color: PremiumTheme.goldAccent),
+                                    errorWidget: (context, url, err) => Image.asset('assets/sreenath.jpg', fit: BoxFit.cover),
+                                  )
+                                : Image.asset(
+                                    'assets/sreenath.jpg',
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) => Container(
+                                      color: PremiumTheme.surfaceElevated,
+                                      child: const Icon(Icons.person, size: 48, color: PremiumTheme.goldLight),
+                                    ),
+                                  ),
                           ),
                         ),
-                        const SizedBox(width: 6),
-                        if (isFaceVerified)
-                          const Icon(Icons.verified, color: PremiumTheme.goldAccent, size: 20),
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: GestureDetector(
+                            onTap: _addGalleryPhoto,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF5A4433),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.edit_rounded, color: Colors.white, size: 14),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
+                    const SizedBox(height: 14),
                     Text(
-                      profile['email'] ?? '',
-                      style: GoogleFonts.inter(color: PremiumTheme.textMuted, fontSize: 13),
+                      '${(profile['name'] ?? 'SREENATH').toString().toUpperCase()}, ${profile['age'] ?? 22}',
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: PremiumTheme.textWhite,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      profile['city'] ?? 'Hyderabad',
+                      style: GoogleFonts.inter(color: PremiumTheme.textSilver, fontSize: 13),
                     ),
                   ],
                 ),
@@ -444,111 +464,236 @@ class _SettingsProfileScreenState extends ConsumerState<SettingsProfileScreen> {
 
               const SizedBox(height: 32),
 
-              // Trust & Verifications Card
+              // Section Header (Exact from Image 4)
               Text(
-                'Trust & Verifications',
-                style: GoogleFonts.cormorantGaramond(
-                  fontSize: 22,
+                'LEVELS OF VERIFICATION',
+                style: GoogleFonts.inter(
+                  fontSize: 11,
                   fontWeight: FontWeight.bold,
-                  color: PremiumTheme.goldAccent,
+                  letterSpacing: 1.5,
+                  color: const Color(0xFF6B5848),
                 ),
               ),
               const SizedBox(height: 12),
-              GlassmorphicContainer(
-                padding: const EdgeInsets.all(16),
-                borderRadius: 20,
+
+              // Card 1: Verification Progress
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: PremiumTheme.goldBorder.withOpacity(0.8)),
+                  boxShadow: [
+                    BoxShadow(color: const Color(0xFF4A3728).withOpacity(0.05), blurRadius: 14, offset: const Offset(0, 4)),
+                  ],
+                ),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Aadhaar Verification status
-                    ListTile(
-                      leading: Icon(
-                        isAadhaarVerified ? Icons.check_circle_rounded : Icons.pending_actions_rounded,
-                        color: isAadhaarVerified ? PremiumTheme.activeBlue : PremiumTheme.textMuted,
-                      ),
-                      title: Text('Aadhaar Verified Badge', style: GoogleFonts.inter(color: PremiumTheme.textWhite)),
-                      subtitle: Text(
-                        isAadhaarVerified ? 'Identity verified successfully' : 'Provide Aadhaar to gain trust score',
-                        style: GoogleFonts.inter(color: PremiumTheme.textMuted, fontSize: 12),
-                      ),
-                      trailing: isAadhaarVerified
-                          ? const Icon(Icons.verified, color: PremiumTheme.activeBlue)
-                          : TextButton(
-                              onPressed: _triggerAadhaarVerify,
-                              child: Text('Verify Now', style: GoogleFonts.inter(color: PremiumTheme.goldAccent)),
-                            ),
-                    ),
-                    const Divider(color: PremiumTheme.goldBorder),
-
-                    // Selfie Face Verification status
-                    ListTile(
-                      leading: Icon(
-                        isFaceVerified ? Icons.check_circle_rounded : Icons.pending_actions_rounded,
-                        color: isFaceVerified ? PremiumTheme.activeBlue : PremiumTheme.textMuted,
-                      ),
-                      title: Text('Face Verification Selfie', style: GoogleFonts.inter(color: PremiumTheme.textWhite)),
-                      subtitle: Text(
-                        isFaceVerified ? 'Facial features verified via Rekognition' : 'Take live selfie comparison check',
-                        style: GoogleFonts.inter(color: PremiumTheme.textMuted, fontSize: 12),
-                      ),
-                      trailing: isFaceVerified
-                          ? const Icon(Icons.verified, color: PremiumTheme.goldAccent)
-                          : TextButton(
-                              onPressed: _isScanning ? null : _triggerSelfieScan,
-                              child: Text(
-                                _isScanning ? 'Scanning...' : 'Verify Selfie',
-                                style: GoogleFonts.inter(color: PremiumTheme.goldAccent, fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                    ),
-
-                    if (_isScanning) ...[
-                      const SizedBox(height: 16),
-                      Center(
-                        child: Container(
-                          width: 140,
-                          height: 140,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: PremiumTheme.crimsonRed, width: 2),
-                          ),
-                          child: const ClipOval(
-                            child: ScanningLineAnimation(),
-                          ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'VERIFICATION PROGRESS',
+                          style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: PremiumTheme.textSilver),
                         ),
-                      )
-                    ],
+                        Text(
+                          isAadhaarVerified && isFaceVerified ? '100%' : isAadhaarVerified || isFaceVerified ? '50%' : '0%',
+                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF007AFF)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: LinearProgressIndicator(
+                        value: isAadhaarVerified && isFaceVerified ? 1.0 : isAadhaarVerified || isFaceVerified ? 0.5 : 0.0,
+                        minHeight: 6,
+                        backgroundColor: const Color(0xFFF0EBE3),
+                        color: const Color(0xFF007AFF),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'COMPLETE LEVEL 1 & LEVEL 2 TO GET THE CHECKMARK BADGE!',
+                      style: GoogleFonts.inter(fontSize: 10.5, fontWeight: FontWeight.bold, color: PremiumTheme.textMuted, letterSpacing: 0.5),
+                    ),
                   ],
                 ),
               ),
+              const SizedBox(height: 14),
 
-              const SizedBox(height: 30),
-
-              // Visibility settings controls
-              Text(
-                'Visibility Configurations',
-                style: GoogleFonts.cormorantGaramond(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: PremiumTheme.goldAccent,
-                ),
-              ),
-              const SizedBox(height: 12),
-              GlassmorphicContainer(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                borderRadius: 16,
-                child: SwitchListTile(
-                  value: isPhoneVisible,
-                  onChanged: (val) {
-                    ref.read(authProvider.notifier).togglePhoneVisibility(val);
-                  },
-                  activeColor: PremiumTheme.goldAccent,
-                  inactiveThumbColor: PremiumTheme.textMuted,
-                  inactiveTrackColor: Colors.black38,
-                  title: Text('Phone Visibility', style: GoogleFonts.inter(color: PremiumTheme.textWhite)),
-                  subtitle: Text(
-                    'Allow mutual matches to request or view your phone number (requires Rose unlock)',
-                    style: GoogleFonts.inter(color: PremiumTheme.textMuted, fontSize: 12),
+              // 2 Cards Side-by-Side: Level 1 & Level 2
+              Row(
+                children: [
+                  // Level 1: Aadhaar Identity
+                  Expanded(
+                    child: Container(
+                      height: 155,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: PremiumTheme.goldBorder.withOpacity(0.8)),
+                        boxShadow: [
+                          BoxShadow(color: const Color(0xFF4A3728).withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4)),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('LEVEL 1', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: PremiumTheme.textMuted)),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: isAadhaarVerified ? Colors.green.withOpacity(0.12) : const Color(0xFFF2ECE1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  isAadhaarVerified ? 'VERIFIED' : 'PENDING',
+                                  style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.bold, color: isAadhaarVerified ? Colors.green : PremiumTheme.textSilver),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Aadhaar Identity', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: PremiumTheme.textWhite)),
+                              const SizedBox(height: 2),
+                              Text('Verify identity to activate Level 1.', style: GoogleFonts.inter(fontSize: 10.5, color: PremiumTheme.textMuted)),
+                            ],
+                          ),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 32,
+                            child: ElevatedButton(
+                              onPressed: isAadhaarVerified ? null : _triggerAadhaarVerify,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF007AFF),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              ),
+                              child: Text(isAadhaarVerified ? 'Verified' : 'Verify', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
+                  const SizedBox(width: 12),
+
+                  // Level 2: Live AI Selfie
+                  Expanded(
+                    child: Container(
+                      height: 155,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: PremiumTheme.goldBorder.withOpacity(0.8)),
+                        boxShadow: [
+                          BoxShadow(color: const Color(0xFF4A3728).withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4)),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('LEVEL 2', style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: PremiumTheme.textMuted)),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: isFaceVerified ? Colors.green.withOpacity(0.12) : const Color(0xFFF2ECE1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  isFaceVerified ? 'VERIFIED' : 'PENDING',
+                                  style: GoogleFonts.inter(fontSize: 9, fontWeight: FontWeight.bold, color: isFaceVerified ? Colors.green : PremiumTheme.textSilver),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Live AI Selfie', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.bold, color: PremiumTheme.textWhite)),
+                              const SizedBox(height: 2),
+                              Text('Match selfie with DP to activate Level 2.', style: GoogleFonts.inter(fontSize: 10.5, color: PremiumTheme.textMuted)),
+                            ],
+                          ),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 32,
+                            child: OutlinedButton(
+                              onPressed: isFaceVerified || _isScanning ? null : _triggerSelfieScan,
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Color(0xFF007AFF)),
+                                foregroundColor: const Color(0xFF007AFF),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              ),
+                              child: Text(_isScanning ? '...' : (isFaceVerified ? 'Verified' : 'Verify'), style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              // Card 3: Phone Number Privacy (from Image 4)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: PremiumTheme.goldBorder.withOpacity(0.8)),
+                  boxShadow: [
+                    BoxShadow(color: const Color(0xFF4A3728).withOpacity(0.05), blurRadius: 12, offset: const Offset(0, 4)),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4A3728),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Icon(Icons.lock_outline_rounded, color: Colors.white, size: 22),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Phone Number Privacy', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: PremiumTheme.textWhite)),
+                          const SizedBox(height: 2),
+                          Text('Other users can spend 5 Roses to unlock your verified phone number.', style: GoogleFonts.inter(fontSize: 11, color: PremiumTheme.textMuted)),
+                        ],
+                      ),
+                    ),
+                    Switch(
+                      value: isPhoneVisible,
+                      onChanged: (val) {
+                        ref.read(authProvider.notifier).togglePhoneVisibility(val);
+                      },
+                      activeColor: const Color(0xFF4A3728),
+                    ),
+                  ],
                 ),
               ),
 

@@ -54,63 +54,80 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(
-          'MATCH CHATS',
-          style: GoogleFonts.cormorantGaramond(fontWeight: FontWeight.bold, color: PremiumTheme.textWhite),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.phone_callback_rounded, color: PremiumTheme.goldAccent),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const CallHistoryScreen()),
-              );
-            },
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
       body: AestheticBackground(
         verticalText: 'CHATS',
         child: Stack(
           children: [
-            // Main chats lists
+            // Main chats list with Image 5 styling
             Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // 1. Matches horizontal Checklist Row
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
-                  child: Text(
-                    'New Connections',
-                    style: GoogleFonts.cormorantGaramond(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: PremiumTheme.goldAccent,
-                    ),
+                const SizedBox(height: 72),
+
+                // Segmented Pill: [ Matches (X) | Requests (X) ] (from Image 5)
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(color: PremiumTheme.goldBorder.withOpacity(0.8)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4A3728).withOpacity(0.05),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color: PremiumTheme.darkEspresso,
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            'Matches (${chatState.matches.length})',
+                            style: GoogleFonts.inter(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const RequestsScreen()),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            alignment: Alignment.center,
+                            child: Text(
+                              'Requests (0)',
+                              style: GoogleFonts.inter(
+                                color: PremiumTheme.textSilver,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                _buildMatchesRow(chatState.matches),
+                const SizedBox(height: 20),
 
-                const Divider(color: PremiumTheme.goldLight, height: 32),
-
-                // 2. Active Chat Rooms List
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text(
-                    'Conversations',
-                    style: GoogleFonts.cormorantGaramond(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: PremiumTheme.goldAccent,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
+                // Matches list cards (Image 5)
                 Expanded(
                   child: _buildConversationsList(chatState.matches),
                 ),
@@ -292,71 +309,76 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ? (photos[0].startsWith('http') ? photos[0] : '${ApiService.baseUrl}${photos[0]}')
             : '';
 
-        return GlassmorphicContainer(
-          margin: const EdgeInsets.only(bottom: 12),
-          borderRadius: 16,
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: PremiumTheme.goldBorder.withOpacity(0.8)),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF4A3728).withOpacity(0.04),
+                blurRadius: 14,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
           child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             onTap: () => _openChatRoom(matchItem),
             leading: Stack(
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(25),
+                  borderRadius: BorderRadius.circular(16),
                   child: SizedBox(
-                    width: 50,
-                    height: 50,
+                    width: 48,
+                    height: 48,
                     child: hasPhoto
                         ? CachedNetworkImage(
                             imageUrl: photoUrl,
                             fit: BoxFit.cover,
                           )
-                        : Container(color: PremiumTheme.surfaceElevated, child: const Icon(Icons.person, color: PremiumTheme.goldLight)),
+                        : Container(color: const Color(0xFFF0EBE3), child: const Icon(Icons.person, color: Color(0xFF756557))),
                   ),
                 ),
                 Positioned(
                   right: 0,
                   bottom: 0,
                   child: Container(
-                    width: 16,
-                    height: 16,
+                    width: 12,
+                    height: 12,
                     decoration: BoxDecoration(
-                      color: isUnlocked ? Colors.green : PremiumTheme.goldAccent,
+                      color: const Color(0xFF34C759),
                       shape: BoxShape.circle,
-                      border: Border.all(color: PremiumTheme.surfaceCard, width: 1.5),
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(
-                      isUnlocked ? Icons.circle : Icons.lock,
-                      size: 9,
-                      color: isUnlocked ? Colors.transparent : Colors.white,
+                      border: Border.all(color: Colors.white, width: 2),
                     ),
                   ),
                 ),
               ],
             ),
-            title: Row(
-              children: [
-                Text(
-                  profile['name'] ?? 'User',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: PremiumTheme.textWhite),
-                ),
-                const SizedBox(width: 6),
-                if (profile['face_verified'] == true)
-                  const Icon(Icons.verified, color: PremiumTheme.goldAccent, size: 16),
-              ],
+            title: Text(
+              profile['name'] ?? 'User',
+              style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 15, color: PremiumTheme.textWhite),
             ),
             subtitle: Text(
-              isUnlocked ? 'Tap to chat & check Vedic compatibility score!' : 'Locked - Tap to unlock connection',
+              'Tap to start chatting!',
               style: GoogleFonts.inter(
-                color: isUnlocked ? PremiumTheme.textMuted : PremiumTheme.goldAccent.withOpacity(0.8),
+                color: PremiumTheme.textMuted,
                 fontSize: 12,
-                fontWeight: isUnlocked ? FontWeight.normal : FontWeight.w500,
               ),
             ),
-            trailing: Icon(
-              isUnlocked ? Icons.arrow_forward_ios_rounded : Icons.lock_outline,
-              size: 14,
-              color: PremiumTheme.goldAccent,
+            trailing: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF7F3EC),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: Color(0xFF756557),
+              ),
             ),
           ),
         );
@@ -537,28 +559,33 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
           children: [
             CircleAvatar(
               radius: 18,
-              backgroundColor: PremiumTheme.surfaceCard,
+              backgroundColor: const Color(0xFFE5DDD1),
               backgroundImage: partner['photoUrl'] != null 
                   ? NetworkImage('${ApiService.baseUrl}${partner['photoUrl']}') 
                   : null,
+              child: partner['photoUrl'] == null ? const Icon(Icons.person, size: 20, color: Color(0xFF756557)) : null,
             ),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(partner['name'] ?? 'User', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold)),
-                  Text(
-                    isUnlocked 
-                        ? (isTypingPartner ? 'typing...' : 'Online')
-                        : 'Offline',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: isUnlocked && isTypingPartner 
-                          ? PremiumTheme.goldAccent 
-                          : (isUnlocked ? Colors.green : PremiumTheme.textMuted),
-                      fontStyle: isUnlocked && isTypingPartner ? FontStyle.italic : FontStyle.normal,
-                    ),
+                  Text(partner['name'] ?? 'User', style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: const Color(0xFF241C15))),
+                  Row(
+                    children: [
+                      Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFF34C759), shape: BoxShape.circle)),
+                      const SizedBox(width: 4),
+                      Text(
+                        isUnlocked 
+                            ? (isTypingPartner ? 'typing...' : 'Online')
+                            : 'Offline',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF34C759),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -566,10 +593,32 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
           ],
         ),
         actions: [
+          // Sparkle AI button
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AstroMatchScreen(targetUser: partner)),
+              );
+            },
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAF6F0),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFE8DFD3)),
+              ),
+              alignment: Alignment.center,
+              child: const Text('✨', style: TextStyle(fontSize: 14)),
+            ),
+          ),
+          const SizedBox(width: 10),
+
+          // Phone Call button (Image 6)
           if (isUnlocked)
-            IconButton(
-              icon: const Icon(Icons.phone_rounded, color: PremiumTheme.goldAccent),
-              onPressed: () {
+            GestureDetector(
+              onTap: () {
                 final myName = authState.profile?['name'] ?? 'User';
                 final myPhoto = authState.profile?['photoUrl'] ?? '';
                 final partnerName = partner['name'] ?? 'User';
@@ -585,18 +634,19 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                   partnerPhoto: partnerPhoto,
                 );
               },
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFAF6F0),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFF34C759).withOpacity(0.5)),
+                ),
+                alignment: Alignment.center,
+                child: const Icon(Icons.phone_rounded, color: Color(0xFF34C759), size: 18),
+              ),
             ),
-
-          // 2. Launch AstroMatch directly from chat
-          IconButton(
-            icon: const Icon(Icons.auto_awesome_rounded, color: PremiumTheme.goldAccent),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => AstroMatchScreen(targetUser: partner)),
-              );
-            },
-          )
+          const SizedBox(width: 16),
         ],
       ),
       body: Stack(
@@ -897,59 +947,20 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          gradient: isMe ? PremiumTheme.buttonGradient : null,
-          color: isMe ? null : PremiumTheme.surfaceCard,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(isMe ? 16 : 2),
-            bottomRight: Radius.circular(isMe ? 2 : 16),
-          ),
-          border: isMe ? null : Border.all(color: PremiumTheme.goldBorder, width: 1.2),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF6E522E).withOpacity(isMe ? 0.2 : 0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
+          color: isMe ? const Color(0xFF007AFF) : const Color(0xFFF0ECE6),
+          borderRadius: BorderRadius.circular(18),
         ),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              text,
-              style: GoogleFonts.inter(
-                color: isMe ? Colors.white : PremiumTheme.textWhite,
-                fontSize: 14,
-                fontWeight: isMe ? FontWeight.w600 : FontWeight.normal,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Text(
-                  '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
-                  style: TextStyle(
-                    fontSize: 9,
-                    color: isMe ? Colors.white70 : PremiumTheme.textMuted,
-                  ),
-                ),
-                if (isMe)
-                  const Padding(
-                    padding: EdgeInsets.only(left: 4.0),
-                    child: Icon(Icons.done_all, size: 10, color: Colors.white),
-                  )
-              ],
-            )
-          ],
+        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.72),
+        child: Text(
+          text,
+          style: GoogleFonts.inter(
+            color: isMe ? Colors.white : const Color(0xFF241C15),
+            fontSize: 14.5,
+            fontWeight: FontWeight.w400,
+          ),
         ),
       ),
     );

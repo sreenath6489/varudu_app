@@ -10,7 +10,6 @@ import 'rose_boutique_screen.dart';
 import 'chat_screen.dart';
 import 'settings_profile_screen.dart';
 import '../widgets/aesthetic_background.dart';
-import '../widgets/glassmorphic_container.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -33,434 +32,346 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
   }
 
+  void _onTabSelected(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<Widget> screens = [
-      // Index 0: Dashboard Tab
-      DashboardTab(onNavigate: (index) {
-        setState(() {
-          _currentIndex = index;
-        });
-      }),
-      // Index 1: Swipe Explore
+      // Index 0: Home Hero Tab (Exact varudu.in match)
+      VaruduHomeHeroTab(onNavigate: _onTabSelected),
+      // Index 1: Discover / Swipe Cards (varudu.in/discover)
       const ProfilesScreen(),
-      // Index 2: Likes / Requests Tab
+      // Index 2: Likes / Requests (varudu.in/interests)
       const RequestsScreen(),
-      // Index 3: Boutique Shop Tab
+      // Index 3: Rose Boutique Shop (varudu.in/store)
       const RoseBoutiqueScreen(),
-      // Index 4: Chats Tab
+      // Index 4: Chats & Matches (varudu.in/chat)
       const ChatScreen(),
-      // Index 5: Account Settings Tab
+      // Index 5: Account & Verification (varudu.in/profile)
       const SettingsProfileScreen(),
     ];
 
     return Scaffold(
       backgroundColor: PremiumTheme.primaryBgLight,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: screens,
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: PremiumTheme.primaryBgLight,
-          border: const Border(
-            top: BorderSide(
-              color: PremiumTheme.goldBorder,
-              width: 1.0,
+      body: Stack(
+        children: [
+          IndexedStack(
+            index: _currentIndex,
+            children: screens,
+          ),
+
+          // Floating Top Navigation Bar (matching varudu.in top icon dock)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: _buildTopNavigationDock(),
+              ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  /// The 6-icon top dock seen across all varudu.in screenshots
+  Widget _buildTopNavigationDock() {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.85),
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: PremiumTheme.goldBorder.withOpacity(0.8), width: 1.0),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF6E522E).withOpacity(0.05),
+              color: const Color(0xFF4A3728).withOpacity(0.06),
               blurRadius: 16,
-              offset: const Offset(0, -4),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: PremiumTheme.primaryBgLight,
-          selectedItemColor: PremiumTheme.goldAccent,
-          unselectedItemColor: PremiumTheme.textMuted,
-          selectedLabelStyle: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 11),
-          unselectedLabelStyle: GoogleFonts.inter(fontSize: 10),
-          showSelectedLabels: true,
-          showUnselectedLabels: true,
-          elevation: 0,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home_filled),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.explore_outlined),
-              activeIcon: Icon(Icons.explore),
-              label: 'Explore',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.favorite_outline_rounded),
-              activeIcon: Icon(Icons.favorite_rounded),
-              label: 'Likes',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.auto_awesome_outlined),
-              activeIcon: Icon(Icons.auto_awesome),
-              label: 'Boutique',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.chat_bubble_outline_rounded),
-              activeIcon: Icon(Icons.chat_bubble_rounded),
-              label: 'Chats',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline_rounded),
-              activeIcon: Icon(Icons.person_rounded),
-              label: 'Account',
-            ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildDockIcon(0, Icons.home_rounded),
+            _buildDockIcon(1, Icons.explore_rounded),
+            _buildDockIcon(2, Icons.favorite_rounded),
+            _buildDockIcon(3, Icons.auto_awesome_rounded),
+            _buildDockIcon(4, Icons.chat_bubble_rounded),
+            _buildDockIcon(5, Icons.person_rounded),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDockIcon(int index, IconData icon) {
+    final isSelected = _currentIndex == index;
+    return GestureDetector(
+      onTap: () => _onTabSelected(index),
+      child: Container(
+        width: 40,
+        height: 40,
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFE5DDD1) : Colors.transparent,
+          shape: BoxShape.circle,
+        ),
+        alignment: Alignment.center,
+        child: Icon(
+          icon,
+          size: 20,
+          color: isSelected ? PremiumTheme.darkEspresso : PremiumTheme.textSilver,
         ),
       ),
     );
   }
 }
 
-// ---------------- DASHBOARD TAB SCREEN ----------------
-class DashboardTab extends ConsumerWidget {
+// ---------------- HERO TAB (EXACT REPLICA OF varudu.in HOME SCREEN) ----------------
+class VaruduHomeHeroTab extends StatefulWidget {
   final Function(int) onNavigate;
 
-  const DashboardTab({super.key, required this.onNavigate});
+  const VaruduHomeHeroTab({super.key, required this.onNavigate});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authProvider);
-    final profile = authState.profile ?? {};
-    final roseBalance = profile['roses_balance'] ?? 0;
+  State<VaruduHomeHeroTab> createState() => _VaruduHomeHeroTabState();
+}
 
+class _VaruduHomeHeroTabState extends State<VaruduHomeHeroTab> {
+  String _lookingFor = 'Bride';
+  String _ageRange = '22 - 30';
+  String _religion = 'Any';
+  String _location = 'Any';
+
+  @override
+  Widget build(BuildContext context) {
     return AestheticBackground(
-      verticalText: 'VARUDU',
       child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Top Balance and Logout Row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  GlassmorphicContainer(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    borderRadius: 20,
-                    border: Border.all(color: PremiumTheme.goldAccent.withOpacity(0.3)),
+        child: Column(
+          children: [
+            const Spacer(flex: 2),
+
+            // 1. Center Hero Logo: "Varudu" with metallic gold gradient & swash flourish
+            ShaderMask(
+              shaderCallback: (bounds) => PremiumTheme.logoGoldGradient.createShader(bounds),
+              child: Text(
+                'Varudu',
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 68,
+                  fontWeight: FontWeight.w700,
+                  fontStyle: FontStyle.italic,
+                  color: Colors.white,
+                  letterSpacing: -1.0,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // 2. Subtitle: "Meaningful Matches for a Brighter Tomorrow"
+            Text(
+              'Meaningful Matches\nfor a Brighter Tomorrow',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.cormorantGaramond(
+                fontSize: 16,
+                letterSpacing: 2.0,
+                color: const Color(0xFF7A6A5C),
+                fontWeight: FontWeight.w600,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // 3. Lotus ornament line divider
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(width: 32, height: 1, color: PremiumTheme.goldBorder),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10.0),
+                  child: Text('🪷', style: TextStyle(fontSize: 13)),
+                ),
+                Container(width: 32, height: 1, color: PremiumTheme.goldBorder),
+              ],
+            ),
+            const SizedBox(height: 36),
+
+            // 4. Signature Capsule Search Bar (from Image 1)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(40),
+                  border: Border.all(color: PremiumTheme.goldBorder.withOpacity(0.8)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF4A3728).withOpacity(0.08),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Segmented Filter Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildSearchFilterItem('Looking for', _lookingFor, ['Bride', 'Groom'], (val) {
+                          setState(() => _lookingFor = val);
+                        }),
+                        _buildDivider(),
+                        _buildSearchFilterItem('Age range', _ageRange, ['20 - 25', '22 - 30', '28 - 35'], (val) {
+                          setState(() => _ageRange = val);
+                        }),
+                      ],
+                    ),
+                    const Divider(color: Color(0xFFF0EAE1), height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildSearchFilterItem('Religion', _religion, ['Any', 'Hindu', 'Christian', 'Muslim'], (val) {
+                          setState(() => _religion = val);
+                        }),
+                        _buildDivider(),
+                        _buildSearchFilterItem('Location', _location, ['Any', 'Hyderabad', 'Bangalore', 'Tirupati'], (val) {
+                          setState(() => _location = val);
+                        }),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Deep Espresso Coffee "Search" Pill Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton.icon(
+                        onPressed: () => widget.onNavigate(1), // Open Discover tab
+                        icon: const Icon(Icons.search, size: 18, color: Colors.white),
+                        label: Text(
+                          'Search',
+                          style: GoogleFonts.inter(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: PremiumTheme.darkEspresso,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // 5. Logout Button (as seen in Image 1)
+            Consumer(
+              builder: (context, ref, _) {
+                return GestureDetector(
+                  onTap: () => ref.read(authProvider.notifier).logout(),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: PremiumTheme.goldBorder),
+                    ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('🌹', style: TextStyle(fontSize: 18)),
+                        const Icon(Icons.logout_rounded, size: 14, color: PremiumTheme.textSilver),
                         const SizedBox(width: 6),
                         Text(
-                          '$roseBalance Roses',
+                          'Logout',
                           style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: PremiumTheme.goldAccent,
+                            fontSize: 12,
+                            color: PremiumTheme.textSilver,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      ref.read(authProvider.notifier).logout();
-                    },
-                    child: GlassmorphicContainer(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      borderRadius: 20,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.logout_rounded, size: 14, color: PremiumTheme.crimsonRed),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Logout',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: PremiumTheme.textSilver,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 28),
+                );
+              },
+            ),
 
-              // Animated Pulsing Heart with Golden Halo
-              Center(
-                child: Column(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: PremiumTheme.surfaceCard,
-                        border: Border.all(color: PremiumTheme.goldAccent.withOpacity(0.4), width: 2),
-                        boxShadow: [
-                          BoxShadow(
-                            color: PremiumTheme.goldAccent.withOpacity(0.25),
-                            blurRadius: 28,
-                            spreadRadius: 2,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.favorite_rounded,
-                        size: 42,
-                        color: PremiumTheme.crimsonRed,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Brand Title
-                    Text(
-                      'Varudu Matrimony',
-                      style: GoogleFonts.cormorantGaramond(
-                        fontSize: 38,
-                        fontWeight: FontWeight.bold,
-                        color: PremiumTheme.textWhite,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-
-                    // Description
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: Text(
-                        'Vedic Ashtakoota compatibility analysis and royal rose connections.',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(
-                          fontSize: 13.5,
-                          color: PremiumTheme.textSilver,
-                          height: 1.5,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 32),
-
-              // Search Filter Bar
-              Row(
-                children: [
-                  Expanded(
-                    child: GlassmorphicContainer(
-                      height: 54,
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      borderRadius: 16,
-                      child: TextField(
-                        style: GoogleFonts.inter(color: PremiumTheme.textWhite),
-                        decoration: InputDecoration(
-                          hintText: 'Search city, caste, or name...',
-                          hintStyle: GoogleFonts.inter(color: PremiumTheme.textMuted, fontSize: 14),
-                          prefixIcon: const Icon(Icons.search_rounded, color: PremiumTheme.goldAccent),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  GestureDetector(
-                    onTap: () => onNavigate(1), // Go to Swipe
-                    child: Container(
-                      height: 54,
-                      width: 54,
-                      decoration: BoxDecoration(
-                        gradient: PremiumTheme.buttonGradient,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: PremiumTheme.goldAccent.withOpacity(0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.tune_rounded,
-                        color: Colors.white,
-                        size: 22,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Quick Launch Swiping Button
-              SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    gradient: PremiumTheme.buttonGradient,
-                    boxShadow: [
-                      BoxShadow(
-                        color: PremiumTheme.goldAccent.withOpacity(0.35),
-                        blurRadius: 16,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: ElevatedButton(
-                    onPressed: () => onNavigate(1),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.explore, color: Colors.white, size: 20),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Discover Matching Profiles',
-                          style: GoogleFonts.inter(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 30),
-
-              // Grid Shortcuts (Likes, Rose Shop, Chats)
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildShortCard(
-                      'Likes Tab',
-                      Icons.favorite_rounded,
-                      PremiumTheme.crimsonRed,
-                      () => onNavigate(2),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildShortCard(
-                      'Rose Shop',
-                      Icons.auto_awesome,
-                      PremiumTheme.goldAccent,
-                      () => onNavigate(3),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildShortCard(
-                      'Chats',
-                      Icons.chat_bubble_rounded,
-                      PremiumTheme.activeBlue,
-                      () => onNavigate(4),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 22),
-
-              // Ashtakoota Compatibility Prompt Box
-              GlassmorphicContainer(
-                padding: const EdgeInsets.all(18),
-                borderRadius: 16,
-                border: Border.all(color: PremiumTheme.goldAccent.withOpacity(0.25)),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: PremiumTheme.goldAccent.withOpacity(0.12),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Text('✨', style: TextStyle(fontSize: 22)),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Horoscope Matchmaking',
-                            style: GoogleFonts.cormorantGaramond(
-                              fontWeight: FontWeight.bold,
-                              color: PremiumTheme.goldAccent,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Vedic Ashtakoota 36-point compatibility engine is active.',
-                            style: GoogleFonts.inter(color: PremiumTheme.textSilver, fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-            ],
-          ),
+            const Spacer(flex: 3),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildShortCard(String label, IconData icon, Color iconColor, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: GlassmorphicContainer(
-        height: 100,
-        borderRadius: 16,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: 22, color: iconColor),
+  Widget _buildDivider() {
+    return Container(
+      width: 1,
+      height: 32,
+      color: const Color(0xFFF0EAE1),
+    );
+  }
+
+  Widget _buildSearchFilterItem(
+    String label,
+    String currentValue,
+    List<String> options,
+    Function(String) onSelected,
+  ) {
+    return PopupMenuButton<String>(
+      onSelected: onSelected,
+      itemBuilder: (context) => options.map((opt) {
+        return PopupMenuItem<String>(
+          value: opt,
+          child: Text(opt, style: GoogleFonts.inter(fontSize: 13, color: PremiumTheme.textWhite)),
+        );
+      }).toList(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: PremiumTheme.textMuted,
+              fontWeight: FontWeight.w500,
             ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
-                color: PremiumTheme.textWhite,
+          ),
+          const SizedBox(height: 2),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                currentValue,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: PremiumTheme.textWhite,
+                ),
               ),
-            ),
-          ],
-        ),
+              const SizedBox(width: 4),
+              const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: PremiumTheme.textMuted),
+            ],
+          ),
+        ],
       ),
     );
   }

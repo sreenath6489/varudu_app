@@ -47,10 +47,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       lastDate: DateTime.now().subtract(const Duration(days: 365 * 18)),
       builder: (context, child) {
         return Theme(
-          data: ThemeData.light().copyWith(
-            colorScheme: const ColorScheme.light(
+          data: ThemeData.dark().copyWith(
+            colorScheme: const ColorScheme.dark(
               primary: PremiumTheme.goldAccent,
-              onPrimary: Colors.white,
+              onPrimary: PremiumTheme.primaryBgBlack,
               surface: PremiumTheme.surfaceCard,
               onSurface: PremiumTheme.textWhite,
             ),
@@ -130,7 +130,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final isLoading = authState.status == AuthStatus.loading;
 
     return Scaffold(
-      backgroundColor: PremiumTheme.primaryBgLight,
+      backgroundColor: PremiumTheme.primaryBgBlack,
       appBar: AppBar(
         title: Text(
           'PROFILE SETUP',
@@ -164,7 +164,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                           shape: BoxShape.circle,
                           color: PremiumTheme.surfaceCard,
                           border: Border.all(
-                            color: _selectedPhoto != null ? PremiumTheme.goldAccent : PremiumTheme.goldBorder,
+                            color: _selectedPhoto != null ? PremiumTheme.goldAccent : Colors.grey.shade800,
                             width: 2,
                           ),
                         ),
@@ -201,7 +201,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 controller: _dobController,
                 readOnly: true,
                 onTap: () => _selectDob(context),
-                style: GoogleFonts.inter(color: PremiumTheme.textWhite),
+                style: const TextStyle(color: Colors.white),
                 decoration: _buildInputDecoration('Select Date of Birth', Icons.calendar_today_outlined),
               ),
               const SizedBox(height: 24),
@@ -253,11 +253,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(27)),
                     ),
                     child: isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
+                        ? const CircularProgressIndicator(color: PremiumTheme.primaryBgBlack)
                         : Text(
                             'Complete Setup',
                             style: GoogleFonts.outfit(
-                              color: Colors.white,
+                              color: PremiumTheme.primaryBgBlack,
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),
@@ -284,7 +284,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
-          style: GoogleFonts.inter(color: PremiumTheme.textWhite),
+          style: const TextStyle(color: Colors.white),
           decoration: _buildInputDecoration(label, icon),
         ),
       ],
@@ -297,10 +297,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       hintStyle: const TextStyle(color: PremiumTheme.textMuted),
       prefixIcon: Icon(icon, color: PremiumTheme.goldAccent),
       filled: true,
-      fillColor: PremiumTheme.surfaceElevated,
+      fillColor: PremiumTheme.surfaceCard,
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: PremiumTheme.goldBorder),
+        borderSide: BorderSide(color: Colors.grey.shade900),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -316,10 +316,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       child: Container(
         height: 48,
         decoration: BoxDecoration(
-          color: isSelected ? PremiumTheme.goldAccent.withOpacity(0.12) : PremiumTheme.surfaceElevated,
+          color: isSelected ? PremiumTheme.goldAccent.withOpacity(0.1) : PremiumTheme.surfaceCard,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? PremiumTheme.goldAccent : PremiumTheme.goldBorder,
+            color: isSelected ? PremiumTheme.goldAccent : Colors.grey.shade900,
             width: 1.5,
           ),
         ),

@@ -3,14 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/premium_theme.dart';
 
+/// Recreates the signature sunlit sand wall with delicate organic foliage shadows
+/// exactly as seen on varudu.in!
 class AestheticBackground extends StatefulWidget {
   final Widget child;
-  final String verticalText;
+  final String? verticalText;
+  final bool showSparkleFab;
+  final VoidCallback? onSparkleTap;
 
   const AestheticBackground({
     super.key,
     required this.child,
-    required this.verticalText,
+    this.verticalText,
+    this.showSparkleFab = true,
+    this.onSparkleTap,
   });
 
   @override
@@ -19,256 +25,203 @@ class AestheticBackground extends StatefulWidget {
 
 class _AestheticBackgroundState extends State<AestheticBackground>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
+  late AnimationController _breezeController;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+    // Gentle natural breeze sway for the sunlit leaf shadows (10-second subtle cycle)
+    _breezeController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 24),
-    )..repeat();
+      duration: const Duration(seconds: 10),
+    )..repeat(reverse: true);
 
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      systemNavigationBarColor: Color(0xFFF9F6F0),
-      systemNavigationBarDividerColor: Colors.transparent,
-      systemNavigationBarIconBrightness: Brightness.dark,
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        systemNavigationBarColor: PremiumTheme.primaryBgLight,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+    );
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _breezeController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final isTablet = size.width > 600;
-
-    return Scaffold(
-      backgroundColor: PremiumTheme.primaryBgLight,
-      body: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          // 1. Warm Beige Liquid Silk Flow Animation
-          Positioned.fill(
-            child: AnimatedBuilder(
-              animation: _controller,
-              builder: (context, _) {
-                return CustomPaint(
-                  painter: BeigeSilkPainter(time: _controller.value),
-                );
-              },
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // 1. Base Sunlit Sand Gradient Background
+        Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFFF7F2EB), // Warm morning sunlight
+                Color(0xFFF3ECE2), // Base warm sand
+                Color(0xFFEBE0D2), // Soft shaded sand depth
+              ],
+              stops: [0.0, 0.45, 1.0],
             ),
           ),
+        ),
 
-          // 2. Ambient Golden Sparkles / Dust Floating Animation
-          Positioned.fill(
-            child: AnimatedBuilder(
-              animation: _controller,
-              builder: (context, _) {
-                return CustomPaint(
-                  painter: GoldenDustPainter(time: _controller.value),
-                );
-              },
-            ),
-          ),
+        // 2. Organic Tree Foliage Shadows
+        AnimatedBuilder(
+          animation: _breezeController,
+          builder: (context, child) {
+            return CustomPaint(
+              painter: SunlitFoliageShadowPainter(
+                sway: _breezeController.value,
+              ),
+              size: Size.infinite,
+            );
+          },
+        ),
 
-          // 3. Large Vertical Background Watermark Text
+        // 3. Main Child Content
+        widget.child,
+
+        // 4. Signature Floating Sparkle Button (as seen in all varudu.in screenshots)
+        if (widget.showSparkleFab)
           Positioned(
-            left: isTablet ? 16 : -20,
-            top: size.height * 0.45,
-            child: IgnorePointer(
-              child: RotatedBox(
-                quarterTurns: 3,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    // Soft Sand Glow
-                    Text(
-                      widget.verticalText,
-                      style: TextStyle(
-                        fontFamily: 'Syne',
-                        fontSize: isTablet ? 130 : 92,
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFFC49339).withOpacity(0.04),
-                        height: 1.0,
-                        letterSpacing: -0.04,
-                      ),
-                    ),
-                    // Main styled text shifted slightly
-                    Positioned(
-                      left: 3,
-                      top: 3,
-                      child: Text(
-                        widget.verticalText,
-                        style: TextStyle(
-                          fontFamily: 'Syne',
-                          fontSize: isTablet ? 110 : 82,
-                          fontWeight: FontWeight.w800,
-                          color: const Color(0xFF8A6D47).withOpacity(0.05),
-                          height: 1.0,
-                          letterSpacing: -0.04,
-                        ),
-                      ),
+            right: 20,
+            bottom: 24,
+            child: GestureDetector(
+              onTap: widget.onSparkleTap,
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0x1F4A3728),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
                   ],
+                ),
+                alignment: Alignment.center,
+                child: const Text(
+                  '✨',
+                  style: TextStyle(fontSize: 18),
                 ),
               ),
             ),
           ),
-
-          // 4. Page Contents
-          Positioned.fill(
-            child: widget.child,
-          ),
-        ],
-      ),
+      ],
     );
   }
 }
 
-// Custom Painter for Warm Beige & Sand Liquid Silk Flow
-class BeigeSilkPainter extends CustomPainter {
-  final double time;
+/// Paints the natural, soft-focus tree and foliage shadows cast across the sunlit wall
+class SunlitFoliageShadowPainter extends CustomPainter {
+  final double sway;
 
-  BeigeSilkPainter({required this.time});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-
-    // Solid warm ivory base
-    final bgPaint = Paint()..color = const Color(0xFFFAF7F2);
-    canvas.drawRect(rect, bgPaint);
-
-    // Wave 1: Warm Sand Champagne Silk
-    final wave1Path = Path();
-    final y1 = size.height * 0.42 + math.sin(time * math.pi * 2 + 1.0) * 40;
-    wave1Path.moveTo(0, size.height);
-    wave1Path.lineTo(0, y1);
-    
-    final controlX1 = size.width * 0.35 + math.cos(time * math.pi * 2) * 55;
-    final controlY1 = size.height * 0.28 + math.sin(time * math.pi * 2) * 65;
-    final controlX2 = size.width * 0.72 - math.sin(time * math.pi * 2) * 55;
-    final controlY2 = size.height * 0.58 + math.cos(time * math.pi * 2) * 45;
-    
-    wave1Path.cubicTo(controlX1, controlY1, controlX2, controlY2, size.width, size.height * 0.48);
-    wave1Path.lineTo(size.width, size.height);
-    wave1Path.close();
-
-    final wave1Paint = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          const Color(0xFFF0E5D3).withOpacity(0.55),
-          const Color(0xFFE8DAC4).withOpacity(0.40),
-        ],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ).createShader(rect);
-    canvas.drawPath(wave1Path, wave1Paint);
-
-    // Wave 2: Soft Radiant Warm Ivory Glow
-    final wave2Path = Path();
-    final y2 = size.height * 0.22 + math.cos(time * math.pi * 2 + 0.5) * 40;
-    wave2Path.moveTo(0, 0);
-    wave2Path.lineTo(0, y2);
-
-    final controlX2_1 = size.width * 0.38 - math.sin(time * math.pi * 2 + 1.2) * 55;
-    final controlY2_1 = size.height * 0.38 + math.cos(time * math.pi * 2 + 0.8) * 45;
-    final controlX2_2 = size.width * 0.78 + math.cos(time * math.pi * 2 + 0.2) * 50;
-    final controlY2_2 = size.height * 0.18 - math.sin(time * math.pi * 2) * 40;
-
-    wave2Path.cubicTo(controlX2_1, controlY2_1, controlX2_2, controlY2_2, size.width, size.height * 0.32);
-    wave2Path.lineTo(size.width, 0);
-    wave2Path.close();
-
-    final wave2Paint = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          const Color(0xFFFFFDF9).withOpacity(0.75),
-          const Color(0xFFF7EFE1).withOpacity(0.45),
-        ],
-        begin: Alignment.bottomLeft,
-        end: Alignment.topRight,
-      ).createShader(rect);
-    canvas.drawPath(wave2Path, wave2Paint);
-
-    // Wave 3: Honey Champagne Amber Ribbon
-    final wave3Path = Path();
-    final startY3 = size.height * 0.62 + math.sin(time * math.pi * 2 - 0.5) * 35;
-    wave3Path.moveTo(0, startY3);
-
-    final controlX3_1 = size.width * 0.28 + math.sin(time * math.pi * 2) * 45;
-    final controlY3_1 = size.height * 0.48 - math.cos(time * math.pi * 2) * 45;
-    final controlX3_2 = size.width * 0.68 - math.cos(time * math.pi * 2) * 45;
-    final controlY3_2 = size.height * 0.82 + math.sin(time * math.pi * 2) * 45;
-
-    wave3Path.cubicTo(controlX3_1, controlY3_1, controlX3_2, controlY3_2, size.width, size.height * 0.66);
-    wave3Path.lineTo(size.width, size.height * 0.82);
-    wave3Path.cubicTo(controlX3_2, controlY3_2 + size.height * 0.08, controlX3_1, controlY3_1 + size.height * 0.08, 0, startY3 + size.height * 0.08);
-    wave3Path.close();
-
-    final wave3Paint = Paint()
-      ..shader = LinearGradient(
-        colors: [
-          const Color(0xFFEBD9BD).withOpacity(0.35),
-          const Color(0xFFDFCAAA).withOpacity(0.20),
-          const Color(0xFFFAF2E4).withOpacity(0.15),
-        ],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ).createShader(rect);
-    canvas.drawPath(wave3Path, wave3Paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant BeigeSilkPainter oldDelegate) {
-    return oldDelegate.time != time;
-  }
-}
-
-// Custom Painter for Gentle Floating Golden Dust / Ambient Sparkles
-class GoldenDustPainter extends CustomPainter {
-  final double time;
-
-  GoldenDustPainter({required this.time});
+  SunlitFoliageShadowPainter({required this.sway});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final particleCount = 18;
-    final rand = math.Random(42); // Fixed seed for reproducible particles
+    final double swayOffset = (sway - 0.5) * 8.0;
 
-    for (int i = 0; i < particleCount; i++) {
-      final baseX = rand.nextDouble();
-      final baseY = rand.nextDouble();
-      final radius = 1.2 + rand.nextDouble() * 2.2;
-      final speed = 0.5 + rand.nextDouble() * 1.0;
-      final phase = rand.nextDouble() * math.pi * 2;
+    // Warm soft shadow paint (diluted sepia/umber tone)
+    final shadowPaint = Paint()
+      ..color = const Color(0xFF6B5848).withOpacity(0.048)
+      ..style = PaintingStyle.fill
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 28);
 
-      // Vertical drift upward with wrap around
-      final currentY = ((baseY - (time * speed)) % 1.0) * size.height;
-      // Slight horizontal sine sway
-      final currentX = (baseX * size.width) + math.sin(time * math.pi * 2 + phase) * 15;
+    final branchPaint = Paint()
+      ..color = const Color(0xFF5A4839).withOpacity(0.04)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 14
+      ..strokeCap = StrokeCap.round
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 22);
 
-      // Pulsing opacity
-      final pulse = (math.sin(time * math.pi * 4 + phase) + 1.0) / 2.0;
-      final alpha = (0.15 + pulse * 0.35);
+    canvas.save();
+    canvas.translate(swayOffset, swayOffset * 0.5);
 
-      final paint = Paint()
-        ..color = const Color(0xFFD4A853).withOpacity(alpha)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.5);
+    // Main Branch 1 (reaching from top-left)
+    final branch1 = Path()
+      ..moveTo(-40, size.height * 0.12)
+      ..quadraticBezierTo(
+        size.width * 0.22,
+        size.height * 0.18,
+        size.width * 0.45,
+        size.height * 0.38,
+      );
+    canvas.drawPath(branch1, branchPaint);
 
-      canvas.drawCircle(Offset(currentX, currentY), radius, paint);
-    }
+    // Branch 2 (upper twig)
+    final branch2 = Path()
+      ..moveTo(size.width * 0.05, -30)
+      ..quadraticBezierTo(
+        size.width * 0.18,
+        size.height * 0.15,
+        size.width * 0.35,
+        size.height * 0.22,
+      );
+    canvas.drawPath(branch2, branchPaint);
+
+    // Leaves Cluster along Branch 1 & 2
+    _drawLeaf(canvas, size.width * 0.12, size.height * 0.14, 55, 32, -0.6, shadowPaint);
+    _drawLeaf(canvas, size.width * 0.18, size.height * 0.20, 68, 36, -0.4, shadowPaint);
+    _drawLeaf(canvas, size.width * 0.25, size.height * 0.16, 52, 28, -0.7, shadowPaint);
+    _drawLeaf(canvas, size.width * 0.22, size.height * 0.26, 62, 34, -0.2, shadowPaint);
+    _drawLeaf(canvas, size.width * 0.30, size.height * 0.24, 75, 40, -0.5, shadowPaint);
+    _drawLeaf(canvas, size.width * 0.38, size.height * 0.32, 70, 36, -0.3, shadowPaint);
+    _drawLeaf(canvas, size.width * 0.44, size.height * 0.40, 58, 30, -0.1, shadowPaint);
+    _drawLeaf(canvas, size.width * 0.34, size.height * 0.42, 64, 34, 0.2, shadowPaint);
+    _drawLeaf(canvas, size.width * 0.24, size.height * 0.36, 56, 30, 0.4, shadowPaint);
+
+    // Far corner soft foliage mass
+    _drawLeaf(canvas, 10, size.height * 0.08, 90, 50, -0.8, shadowPaint);
+    _drawLeaf(canvas, size.width * 0.08, 10, 85, 45, -0.5, shadowPaint);
+    _drawLeaf(canvas, size.width * 0.16, 40, 75, 38, -0.6, shadowPaint);
+
+    // Bottom left soft shadow ground depth
+    final ambientGroundPaint = Paint()
+      ..shader = RadialGradient(
+        center: const Alignment(-0.8, -0.8),
+        radius: 1.2,
+        colors: [
+          const Color(0xFFFFFFFF).withOpacity(0.4),
+          Colors.transparent,
+          const Color(0xFF6B5848).withOpacity(0.03),
+        ],
+        stops: const [0.0, 0.6, 1.0],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), ambientGroundPaint);
+
+    canvas.restore();
+  }
+
+  void _drawLeaf(Canvas canvas, double cx, double cy, double length, double width, double angle, Paint paint) {
+    canvas.save();
+    canvas.translate(cx, cy);
+    canvas.rotate(angle);
+
+    final path = Path();
+    path.moveTo(-length * 0.5, 0);
+    path.quadraticBezierTo(0, -width * 0.6, length * 0.5, 0);
+    path.quadraticBezierTo(0, width * 0.6, -length * 0.5, 0);
+    path.close();
+
+    canvas.drawPath(path, paint);
+    canvas.restore();
   }
 
   @override
-  bool shouldRepaint(covariant GoldenDustPainter oldDelegate) {
-    return oldDelegate.time != time;
+  bool shouldRepaint(covariant SunlitFoliageShadowPainter oldDelegate) {
+    return oldDelegate.sway != sway;
   }
 }

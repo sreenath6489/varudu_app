@@ -379,50 +379,31 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
                               : _buildStackView(discoverState.profiles),
             ),
 
-            // Header segmented control toggles (Minimalist Apple Style)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      GestureDetector(
-                        onTap: () => Navigator.of(context).pop(),
-                        child: GlassmorphicContainer(
-                          padding: const EdgeInsets.all(10),
+            if (Navigator.of(context).canPop())
+              Positioned(
+                top: 0,
+                left: 0,
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
                           shape: BoxShape.circle,
-                          child: const Icon(
-                            Icons.arrow_back_rounded,
-                            color: PremiumTheme.textWhite,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-
-                      // Segmented control toggle
-                      GlassmorphicContainer(
-                        height: 40,
-                        padding: const EdgeInsets.all(2),
-                        borderRadius: 20,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _buildModeToggle(ViewMode.stack, 'STACK'),
-                            _buildModeToggle(ViewMode.reels, 'REELS'),
+                          border: Border.all(color: PremiumTheme.goldBorder),
+                          boxShadow: const [
+                            BoxShadow(color: Color(0x144A3728), blurRadius: 10, offset: Offset(0, 3)),
                           ],
                         ),
+                        child: const Icon(Icons.arrow_back_rounded, color: PremiumTheme.darkEspresso, size: 20),
                       ),
-
-                      const SizedBox(width: 40), // Align center balance
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
           ],
         ),
       ),
@@ -579,217 +560,227 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
                 activePhotoUrl = relative.startsWith('http') ? relative : '${ApiService.baseUrl}$relative';
               }
 
-              return Stack(
-                fit: StackFit.expand,
-                children: [
-                  // Expanded full screen photo image
-                  Positioned.fill(
-                    child: Listener(
-                      onPointerDown: (event) {
-                        _lastTapPosition = event.localPosition;
-                      },
-                      child: GestureDetector(
-                        onTap: () {
-                          final cardWidth = MediaQuery.of(context).size.width;
-                          final tapX = _lastTapPosition.dx;
-                          if (tapX < cardWidth * 0.33) {
-                            _setPhotoIndex(profile['id'], photoIdx - 1, photos.length);
-                          } else {
-                            _setPhotoIndex(profile['id'], photoIdx + 1, photos.length);
-                          }
-                        },
-                        onDoubleTap: () {
-                          setState(() {
-                            _activeHeartProfileId = profile['id'];
-                            _showHeartPop = true;
-                          });
-                          _handleSwipeAction(profile['id'], 'accepted');
-                          Future.delayed(const Duration(milliseconds: 800), () {
-                            if (mounted) setState(() => _showHeartPop = false);
-                          });
-                        },
-                        child: hasPhotos
-                            ? CachedNetworkImage(
-                                imageUrl: activePhotoUrl,
-                                fit: BoxFit.cover,
-                                placeholder: (context, url) => const Center(child: CircularProgressIndicator(color: PremiumTheme.goldAccent)),
-                                errorWidget: (context, url, err) => _buildReelsPlaceholder(),
-                              )
-                            : _buildReelsPlaceholder(),
+              return Center(
+                child: Container(
+                  margin: const EdgeInsets.fromLTRB(16, 74, 16, 24),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(28),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x303E2D20),
+                        blurRadius: 28,
+                        offset: Offset(0, 10),
                       ),
-                    ),
+                    ],
                   ),
-
-                  // Subtle dark overlay gradient at the bottom for text readability
-                  Positioned.fill(
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.black38,
-                            Colors.transparent,
-                            Colors.transparent,
-                            Colors.black54,
-                          ],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          stops: [0.0, 0.2, 0.7, 1.0],
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Top Carousel navigation indicators
-                  if (photos.length > 1)
-                    Positioned(
-                      top: 80,
-                      left: 16,
-                      right: 16,
-                      child: Row(
-                        children: List.generate(photos.length, (idx) {
-                          return Expanded(
-                            child: Container(
-                              height: 3,
-                              margin: const EdgeInsets.symmetric(horizontal: 2.0),
-                              decoration: BoxDecoration(
-                                color: idx == photoIdx ? Colors.white : Colors.white24,
-                                borderRadius: BorderRadius.circular(1.5),
-                              ),
-                            ),
-                          );
-                        }),
-                      ),
-                    ),
-
-                  // Double tap pulsing heart overlay
-                  if (_showHeartPop && _activeHeartProfileId == profile['id'])
-                    const Center(child: PulsingHeartAnimation()),
-
-                  // Bio Metadata Details (Bottom-Left)
-                  Positioned(
-                    left: 20,
-                    bottom: 40,
-                    right: 80,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(28),
+                    child: Stack(
+                      fit: StackFit.expand,
                       children: [
-                        Row(
-                          children: [
-                            Text(
-                              '${profile['name']}, ${profile['age']}',
-                              style: GoogleFonts.inter(
-                                color: Colors.white,
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                shadows: [const Shadow(color: Colors.black87, blurRadius: 8, offset: Offset(0, 1))],
-                              ),
+                        // Expanded photo image
+                        Positioned.fill(
+                          child: Listener(
+                            onPointerDown: (event) {
+                              _lastTapPosition = event.localPosition;
+                            },
+                            child: GestureDetector(
+                              onTap: () {
+                                final cardWidth = MediaQuery.of(context).size.width;
+                                final tapX = _lastTapPosition.dx;
+                                if (tapX < cardWidth * 0.33) {
+                                  _setPhotoIndex(profile['id'], photoIdx - 1, photos.length);
+                                } else {
+                                  _setPhotoIndex(profile['id'], photoIdx + 1, photos.length);
+                                }
+                              },
+                              onDoubleTap: () {
+                                setState(() {
+                                  _activeHeartProfileId = profile['id'];
+                                  _showHeartPop = true;
+                                });
+                                _handleSwipeAction(profile['id'], 'accepted');
+                                Future.delayed(const Duration(milliseconds: 800), () {
+                                  if (mounted) setState(() => _showHeartPop = false);
+                                });
+                              },
+                              child: _buildProfileImage(activePhotoUrl),
                             ),
-                            const SizedBox(width: 8),
-                            if (profile['face_verified'] == true)
-                              const Icon(Icons.verified, color: Colors.white, size: 22),
-                          ],
+                          ),
                         ),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            const Icon(Icons.location_on_rounded, color: Colors.white70, size: 16),
-                            const SizedBox(width: 4),
-                            Text(
-                              profile['city'] ?? 'Location N/A',
-                              style: GoogleFonts.inter(
-                                color: Colors.white,
-                                fontSize: 15,
-                                shadows: [const Shadow(color: Colors.black87, blurRadius: 8)],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        
-                        // Astro quick info tags
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.black45,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.white30),
-                              ),
-                              child: Text(
-                                profile['family_details']?['star'] ?? 'Star N/A',
-                                style: GoogleFonts.inter(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.black45,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.white30),
-                              ),
-                              child: Text(
-                                profile['family_details']?['rasi'] ?? 'Rasi N/A',
-                                style: GoogleFonts.inter(color: Colors.white, fontSize: 11),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
 
-                  // Action Buttons Tray (Right-Side floating menu)
-                  Positioned(
-                    right: 16,
-                    bottom: 40,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildReelsBtn(
-                          icon: Icons.info_outline_rounded,
-                          color: Colors.white,
-                          onTap: () => _showDetailsSheet(profile),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildReelsBtn(
-                          icon: Icons.close_rounded,
-                          color: Colors.white,
-                          onTap: () => _handleSwipeAction(profile['id'], 'rejected'),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildReelsBtn(
-                          icon: Icons.favorite_rounded,
-                          color: Colors.white,
-                          onTap: () => _handleSwipeAction(profile['id'], 'accepted'),
-                        ),
-                        const SizedBox(height: 16),
-                        GestureDetector(
-                          onTap: () => _handleSwipeAction(profile['id'], 'accepted', type: 'rose'),
+                        // Vignette bottom gradient
+                        Positioned.fill(
                           child: Container(
-                            height: 48,
-                            width: 48,
-                            decoration: BoxDecoration(
-                              gradient: PremiumTheme.roseGradient,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: PremiumTheme.goldBright, width: 1.5),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: PremiumTheme.crimsonRed.withOpacity(0.35),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.transparent,
+                                  Colors.transparent,
+                                  Color(0x33000000),
+                                  Color(0xD9000000),
+                                ],
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                stops: [0.0, 0.45, 0.70, 1.0],
+                              ),
                             ),
-                            alignment: Alignment.center,
-                            child: const Text('🌹', style: TextStyle(fontSize: 22)),
+                          ),
+                        ),
+
+                        // Carousel indicators if multiple photos
+                        if (photos.length > 1)
+                          Positioned(
+                            top: 14,
+                            left: 16,
+                            right: 16,
+                            child: Row(
+                              children: List.generate(photos.length, (idx) {
+                                return Expanded(
+                                  child: Container(
+                                    height: 3,
+                                    margin: const EdgeInsets.symmetric(horizontal: 2.0),
+                                    decoration: BoxDecoration(
+                                      color: idx == photoIdx ? Colors.white : Colors.white24,
+                                      borderRadius: BorderRadius.circular(1.5),
+                                    ),
+                                  ),
+                                );
+                              }),
+                            ),
+                          ),
+
+                        // Double tap heart pop
+                        if (_showHeartPop && _activeHeartProfileId == profile['id'])
+                          const Center(child: PulsingHeartAnimation()),
+
+                        // Bottom-Left text details (Matching Image 2)
+                        Positioned(
+                          left: 18,
+                          bottom: 20,
+                          right: 76,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '${profile['name']}, ${profile['age']}',
+                                style: GoogleFonts.inter(
+                                  color: Colors.white,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.2,
+                                  shadows: const [
+                                    Shadow(color: Colors.black87, blurRadius: 8, offset: Offset(0, 1)),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(Icons.location_on_rounded, color: Colors.white.withOpacity(0.85), size: 13),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    profile['city'] ?? 'Tirupati',
+                                    style: GoogleFonts.inter(
+                                      color: Colors.white.withOpacity(0.9),
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      shadows: const [Shadow(color: Colors.black54, blurRadius: 4)],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                '✦ DOUBLE-CLICK IMAGE TO LIKE',
+                                style: GoogleFonts.inter(
+                                  color: Colors.white.withOpacity(0.7),
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 1.1,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Bottom-Right vertical buttons (Matching Image 2)
+                        Positioned(
+                          right: 14,
+                          bottom: 20,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Info button
+                              _buildFrostedActionBtn(
+                                icon: Icons.info_outline_rounded,
+                                onTap: () => _showDetailsSheet(profile),
+                              ),
+                              const SizedBox(height: 10),
+                              // Pass button
+                              _buildFrostedActionBtn(
+                                icon: Icons.close_rounded,
+                                onTap: () => _handleSwipeAction(profile['id'], 'rejected'),
+                              ),
+                              const SizedBox(height: 10),
+                              // Like button (White circle with Black Heart)
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _activeHeartProfileId = profile['id'];
+                                    _showHeartPop = true;
+                                  });
+                                  _handleSwipeAction(profile['id'], 'accepted');
+                                  Future.delayed(const Duration(milliseconds: 800), () {
+                                    if (mounted) setState(() => _showHeartPop = false);
+                                  });
+                                },
+                                child: Container(
+                                  height: 46,
+                                  width: 46,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black26,
+                                        blurRadius: 8,
+                                        offset: Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: const Icon(
+                                    Icons.favorite_rounded,
+                                    color: Colors.black,
+                                    size: 22,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              // Rose button
+                              GestureDetector(
+                                onTap: () => _handleSwipeAction(profile['id'], 'accepted', type: 'rose'),
+                                child: Container(
+                                  height: 38,
+                                  width: 38,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.35),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white.withOpacity(0.18), width: 1.0),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: const Text('🌹', style: TextStyle(fontSize: 18)),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                  )
-                ],
+                  ),
+                ),
               );
             },
           ),
@@ -798,37 +789,52 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
     );
   }
 
+  Widget _buildProfileImage(String photoUrl) {
+    if (photoUrl.isEmpty) {
+      return _buildReelsPlaceholder();
+    }
+    if (photoUrl.startsWith('assets/')) {
+      return Image.asset(photoUrl, fit: BoxFit.cover);
+    }
+    final fullUrl = photoUrl.startsWith('http') ? photoUrl : '${ApiService.baseUrl}$photoUrl';
+    return CachedNetworkImage(
+      imageUrl: fullUrl,
+      fit: BoxFit.cover,
+      placeholder: (context, url) => const Center(
+        child: CircularProgressIndicator(color: PremiumTheme.goldAccent),
+      ),
+      errorWidget: (context, url, err) => _buildReelsPlaceholder(),
+    );
+  }
+
   Widget _buildReelsPlaceholder() {
     return Container(
-      color: PremiumTheme.surfaceElevated,
+      color: const Color(0xFFE8DFD3),
       child: const Center(
-        child: Icon(Icons.person_rounded, size: 80, color: PremiumTheme.goldLight),
+        child: Icon(Icons.person_rounded, size: 80, color: Color(0xFFC59B4E)),
+      ),
+    );
+  }
+
+  Widget _buildFrostedActionBtn({required IconData icon, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 38,
+        width: 38,
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.35),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white.withOpacity(0.18), width: 1.0),
+        ),
+        alignment: Alignment.center,
+        child: Icon(icon, color: Colors.white, size: 19),
       ),
     );
   }
 
   Widget _buildReelsBtn({required IconData icon, required Color color, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 48,
-        width: 48,
-        decoration: BoxDecoration(
-          color: PremiumTheme.surfaceCard.withOpacity(0.88),
-          shape: BoxShape.circle,
-          border: Border.all(color: PremiumTheme.goldBorder, width: 1.2),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF6E522E).withOpacity(0.18),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        alignment: Alignment.center,
-        child: Icon(icon, color: PremiumTheme.goldAccent, size: 22),
-      ),
-    );
+    return _buildFrostedActionBtn(icon: icon, onTap: onTap);
   }
 
   // Stack Swiper View Mode (Tinder Cards)

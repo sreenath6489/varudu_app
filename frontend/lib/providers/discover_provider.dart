@@ -36,8 +36,34 @@ class DiscoverNotifier extends StateNotifier<DiscoverState> {
 
   DiscoverNotifier(this._ref) : super(DiscoverState.initial());
 
-  // Curated High-Definition Editorial Matrimonial Profiles
+  // Curated High-Definition Editorial Matrimonial Profiles (from varudu.in)
   static final List<Map<String, dynamic>> _curatedProfiles = [
+    {
+      'id': 'curated-haripriya-1',
+      'name': 'Haripriya',
+      'age': 21,
+      'city': 'Tirupati',
+      'dob': '2003-08-15',
+      'gender': 'WOMAN',
+      'interestedIn': 'MAN',
+      'photos': [
+        'assets/haripriya.jpg',
+        'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1200&q=85',
+        'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1200&q=85',
+      ],
+      'face_verified': true,
+      'family_details': {
+        'star': 'Uttara',
+        'rasi': 'Kanya (Virgo)',
+        'subCaste': 'Reddy / Kapu',
+        'education': 'B.Tech in Artificial Intelligence',
+        'occupation': 'Software Consultant',
+        'family_status': 'Upper Middle Class',
+        'gothram': 'Kasyapa',
+      },
+      'tob': '06:45 AM',
+      'pob': 'Tirupati, AP',
+    },
     {
       'id': 'curated-pooja-1',
       'name': 'Pooja Sharma',

@@ -23,6 +23,9 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen> with SingleTick
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
     Future.microtask(() => ref.read(requestsProvider.notifier).fetchRequests());
   }
 
@@ -118,40 +121,127 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen> with SingleTick
   Widget build(BuildContext context) {
     final requestsState = ref.watch(requestsProvider);
 
+    final canPop = Navigator.of(context).canPop();
+
     return Scaffold(
       backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(
-          'REQUESTS HUB',
-          style: GoogleFonts.cormorantGaramond(fontWeight: FontWeight.bold, color: PremiumTheme.textWhite),
-        ),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: PremiumTheme.goldAccent,
-          labelColor: PremiumTheme.goldAccent,
-          unselectedLabelColor: PremiumTheme.textMuted,
-          dividerColor: Colors.transparent,
-          tabs: const [
-            Tab(text: 'Received Likes'),
-            Tab(text: 'Sent Likes'),
-          ],
-        ),
-      ),
       body: AestheticBackground(
-        verticalText: 'REQUESTS',
-        child: requestsState.isLoading
-            ? const Center(child: CircularProgressIndicator(color: PremiumTheme.goldAccent))
-            : requestsState.errorMessage.isNotEmpty
-                ? Center(child: Text(requestsState.errorMessage, style: GoogleFonts.inter(color: PremiumTheme.crimsonRed)))
-                : TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildReceivedTab(requestsState.received),
-                      _buildSentTab(requestsState.sent),
+        verticalText: 'INTERESTS',
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                SizedBox(height: canPop ? 60 : 70),
+
+                // Top Segmented Pill: [ Received (X) | Sent (X) ]
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(color: PremiumTheme.goldBorder.withOpacity(0.8)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4A3728).withOpacity(0.05),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
                     ],
                   ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _tabController.index = 0),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(
+                              color: _tabController.index == 0 ? PremiumTheme.darkEspresso : Colors.transparent,
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              'Received (${requestsState.received.length})',
+                              style: GoogleFonts.inter(
+                                color: _tabController.index == 0 ? Colors.white : PremiumTheme.textSilver,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setState(() => _tabController.index = 1),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(
+                              color: _tabController.index == 1 ? PremiumTheme.darkEspresso : Colors.transparent,
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              'Sent (${requestsState.sent.length})',
+                              style: GoogleFonts.inter(
+                                color: _tabController.index == 1 ? Colors.white : PremiumTheme.textSilver,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                Expanded(
+                  child: requestsState.isLoading
+                      ? const Center(child: CircularProgressIndicator(color: PremiumTheme.goldAccent))
+                      : requestsState.errorMessage.isNotEmpty
+                          ? Center(child: Text(requestsState.errorMessage, style: GoogleFonts.inter(color: PremiumTheme.crimsonRed)))
+                          : TabBarView(
+                              controller: _tabController,
+                              children: [
+                                _buildReceivedTab(requestsState.received),
+                                _buildSentTab(requestsState.sent),
+                              ],
+                            ),
+                ),
+              ],
+            ),
+
+            if (canPop)
+              Positioned(
+                top: 0,
+                left: 0,
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: PremiumTheme.goldBorder),
+                          boxShadow: const [
+                            BoxShadow(color: Color(0x144A3728), blurRadius: 10, offset: Offset(0, 3)),
+                          ],
+                        ),
+                        child: const Icon(Icons.arrow_back_rounded, color: PremiumTheme.darkEspresso, size: 20),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
