@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/boutique_provider.dart';
 import '../theme/premium_theme.dart';
+import '../widgets/aesthetic_background.dart';
+import '../widgets/glassmorphic_container.dart';
 
 class RoseBoutiqueScreen extends ConsumerStatefulWidget {
   const RoseBoutiqueScreen({super.key});
@@ -132,209 +134,198 @@ class _RoseBoutiqueScreenState extends ConsumerState<RoseBoutiqueScreen> {
     final boutiqueState = ref.watch(boutiqueProvider);
 
     return Scaffold(
-      backgroundColor: PremiumTheme.primaryBgBlack,
-      body: Stack(
-        children: [
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Balance Banner Card
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      gradient: PremiumTheme.premiumGradient,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: PremiumTheme.goldAccent, width: 1.5),
-                      boxShadow: [
-                        BoxShadow(
-                          color: PremiumTheme.goldAccent.withOpacity(0.1),
-                          blurRadius: 15,
-                          spreadRadius: 2,
-                        )
-                      ],
+      backgroundColor: Colors.transparent,
+      body: AestheticBackground(
+        verticalText: 'BOUTIQUE',
+        child: Stack(
+          children: [
+            SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Balance Banner Card
+                    GlassmorphicContainer(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      borderRadius: 24,
+                      border: Border.all(color: PremiumTheme.goldAccent.withOpacity(0.3), width: 1.5),
+                      child: Column(
+                        children: [
+                          Text(
+                            'YOUR BALANCE',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: PremiumTheme.goldAccent,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text('🌹', style: TextStyle(fontSize: 36)),
+                              const SizedBox(width: 8),
+                              Text(
+                                '${boutiqueState.roseBalance}',
+                                style: GoogleFonts.cormorantGaramond(
+                                  fontSize: 48,
+                                  fontWeight: FontWeight.bold,
+                                  color: PremiumTheme.textWhite,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Referral Code: ${boutiqueState.referralCode}',
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: PremiumTheme.textSilver,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Column(
+                    const SizedBox(height: 30),
+
+                    // Claim daily or ad reward buttons
+                    Row(
                       children: [
-                        Text(
-                          'YOUR BALANCE',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: PremiumTheme.goldAccent,
-                            letterSpacing: 2,
+                        // Daily Free rose
+                        Expanded(
+                          child: _buildActionCard(
+                            title: 'Daily Claim',
+                            iconText: '📅',
+                            subtitle: boutiqueState.claimCooldownSeconds > 0
+                                ? _formatCooldown(boutiqueState.claimCooldownSeconds)
+                                : 'Ready to Claim',
+                            isDisabled: boutiqueState.claimCooldownSeconds > 0,
+                            onTap: _claimFreeRose,
                           ),
                         ),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text('🌹', style: TextStyle(fontSize: 36)),
-                            const SizedBox(width: 8),
-                            Text(
-                              '${boutiqueState.roseBalance}',
-                              style: GoogleFonts.cormorantGaramond(
-                                fontSize: 48,
-                                fontWeight: FontWeight.bold,
-                                color: PremiumTheme.textWhite,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Referral Code: ${boutiqueState.referralCode}',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            color: PremiumTheme.textSilver,
-                            fontWeight: FontWeight.bold,
+                        const SizedBox(width: 14),
+
+                        // Watch ad reward
+                        Expanded(
+                          child: _buildActionCard(
+                            title: 'Watch Ad',
+                            iconText: '🎬',
+                            subtitle: 'Earn 1 Rose',
+                            isDisabled: false,
+                            onTap: _triggerAdWatch,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 30),
+                    const SizedBox(height: 32),
 
-                  // Claim daily or ad reward buttons
-                  Row(
-                    children: [
-                      // Daily Free rose
-                      Expanded(
-                        child: _buildActionCard(
-                          title: 'Daily Claim',
-                          iconText: '📅',
-                          subtitle: boutiqueState.claimCooldownSeconds > 0
-                              ? _formatCooldown(boutiqueState.claimCooldownSeconds)
-                              : 'Ready to Claim',
-                          isDisabled: boutiqueState.claimCooldownSeconds > 0,
-                          onTap: _claimFreeRose,
+                    // Purchase Bundles
+                    Text(
+                      'Purchase Rose Bundles',
+                      style: GoogleFonts.cormorantGaramond(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: PremiumTheme.goldAccent,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    _buildBundleCard(
+                      roses: 1,
+                      price: '₹100',
+                      subtitle: 'Single gesture to grab immediate attention',
+                      tag: 'STARTER',
+                      onTap: () => _buyBundle(1, 100.0),
+                    ),
+                    _buildBundleCard(
+                      roses: 5,
+                      price: '₹350',
+                      subtitle: 'Elegance package (Save 30%)',
+                      tag: 'RECOMMENDED',
+                      isGold: true,
+                      onTap: () => _buyBundle(5, 350.0),
+                    ),
+                    _buildBundleCard(
+                      roses: 20,
+                      price: '₹1150',
+                      subtitle: 'Grand gesture elite collection',
+                      tag: 'BEST VALUE',
+                      onTap: () => _buyBundle(20, 1150.0),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // History logs
+                    Text(
+                      'Transaction History',
+                      style: GoogleFonts.cormorantGaramond(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: PremiumTheme.goldAccent,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    if (boutiqueState.transactions.isEmpty)
+                      Center(
+                        child: Text(
+                          'No transactions recorded yet.',
+                          style: GoogleFonts.inter(color: PremiumTheme.textMuted, fontSize: 14),
+                        ),
+                      )
+                    else
+                      GlassmorphicContainer(
+                        borderRadius: 16,
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: boutiqueState.transactions.length,
+                          separatorBuilder: (context, index) => const Divider(color: PremiumTheme.goldLight, height: 1),
+                          itemBuilder: (context, index) {
+                            final item = boutiqueState.transactions[index];
+                            final amount = item['amount'] ?? 0;
+                            final isCredit = amount > 0;
+                            return ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: isCredit ? Colors.green.withOpacity(0.15) : Colors.red.withOpacity(0.15),
+                                child: Text(
+                                  isCredit ? '+' : '-',
+                                  style: TextStyle(color: isCredit ? Colors.green : Colors.red, fontWeight: FontWeight.bold, fontSize: 18),
+                                ),
+                              ),
+                              title: Text(item['description'] ?? 'Transaction', style: GoogleFonts.inter(color: PremiumTheme.textWhite, fontSize: 14)),
+                              trailing: Text(
+                                '${isCredit ? "" : ""}$amount Roses',
+                                style: GoogleFonts.inter(
+                                  color: isCredit ? Colors.green : PremiumTheme.crimsonRed,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              subtitle: Text(
+                                item['created_at'] != null 
+                                    ? item['created_at'].toString().split('T')[0] 
+                                    : '',
+                                style: GoogleFonts.inter(color: PremiumTheme.textMuted, fontSize: 11),
+                              ),
+                            );
+                          },
                         ),
                       ),
-                      const SizedBox(width: 14),
-
-                      // Watch ad reward
-                      Expanded(
-                        child: _buildActionCard(
-                          title: 'Watch Ad',
-                          iconText: '🎬',
-                          subtitle: 'Earn 1 Rose',
-                          isDisabled: false,
-                          onTap: _triggerAdWatch,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Purchase Bundles
-                  Text(
-                    'Purchase Rose Bundles',
-                    style: GoogleFonts.cormorantGaramond(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: PremiumTheme.goldAccent,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  _buildBundleCard(
-                    roses: 1,
-                    price: '₹100',
-                    subtitle: 'Single gesture to grab immediate attention',
-                    tag: 'STARTER',
-                    onTap: () => _buyBundle(1, 100.0),
-                  ),
-                  _buildBundleCard(
-                    roses: 5,
-                    price: '₹350',
-                    subtitle: 'Elegance package (Save 30%)',
-                    tag: 'RECOMMENDED',
-                    isGold: true,
-                    onTap: () => _buyBundle(5, 350.0),
-                  ),
-                  _buildBundleCard(
-                    roses: 20,
-                    price: '₹1150',
-                    subtitle: 'Grand gesture elite collection',
-                    tag: 'BEST VALUE',
-                    onTap: () => _buyBundle(20, 1150.0),
-                  ),
-                  const SizedBox(height: 32),
-
-                  // History logs
-                  Text(
-                    'Transaction History',
-                    style: GoogleFonts.cormorantGaramond(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: PremiumTheme.goldAccent,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  if (boutiqueState.transactions.isEmpty)
-                    Center(
-                      child: Text(
-                        'No transactions recorded yet.',
-                        style: GoogleFonts.inter(color: PremiumTheme.textMuted, fontSize: 14),
-                      ),
-                    )
-                  else
-                    Container(
-                      decoration: BoxDecoration(
-                        color: PremiumTheme.surfaceCard,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.white10),
-                      ),
-                      child: ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: boutiqueState.transactions.length,
-                        separatorBuilder: (context, index) => const Divider(color: Colors.white10, height: 1),
-                        itemBuilder: (context, index) {
-                          final item = boutiqueState.transactions[index];
-                          final amount = item['amount'] ?? 0;
-                          final isCredit = amount > 0;
-                          return ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: isCredit ? Colors.green.withOpacity(0.15) : Colors.red.withOpacity(0.15),
-                              child: Text(
-                                isCredit ? '+' : '-',
-                                style: TextStyle(color: isCredit ? Colors.green : Colors.red, fontWeight: FontWeight.bold, fontSize: 18),
-                              ),
-                            ),
-                            title: Text(item['description'] ?? 'Transaction', style: GoogleFonts.inter(color: PremiumTheme.textWhite, fontSize: 14)),
-                            trailing: Text(
-                              '${isCredit ? "" : ""}$amount Roses',
-                              style: GoogleFonts.inter(
-                                color: isCredit ? Colors.green : PremiumTheme.crimsonRed,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                            subtitle: Text(
-                              item['created_at'] != null 
-                                  ? item['created_at'].toString().split('T')[0] 
-                                  : '',
-                              style: GoogleFonts.inter(color: PremiumTheme.textMuted, fontSize: 11),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  const SizedBox(height: 48),
-                ],
+                    const SizedBox(height: 48),
+                  ],
+                ),
               ),
             ),
-          ),
 
-          // Custom ad simulation player overlay container
-          if (_adPlaying)
-            _buildAdPlayerOverlay(),
-        ],
+            // Custom ad simulation player overlay container
+            if (_adPlaying)
+              _buildAdPlayerOverlay(),
+          ],
+        ),
       ),
     );
   }
@@ -348,13 +339,11 @@ class _RoseBoutiqueScreenState extends ConsumerState<RoseBoutiqueScreen> {
   }) {
     return GestureDetector(
       onTap: isDisabled ? null : onTap,
-      child: Container(
+      child: GlassmorphicContainer(
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-        decoration: BoxDecoration(
-          color: isDisabled ? Colors.white.withOpacity(0.03) : PremiumTheme.surfaceCard,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isDisabled ? Colors.transparent : Colors.white10),
-        ),
+        borderRadius: 20,
+        opacity: isDisabled ? 0.5 : 0.9,
+        border: Border.all(color: PremiumTheme.goldBorder),
         child: Column(
           children: [
             Text(iconText, style: const TextStyle(fontSize: 32)),
@@ -392,15 +381,11 @@ class _RoseBoutiqueScreenState extends ConsumerState<RoseBoutiqueScreen> {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: double.infinity,
+      child: GlassmorphicContainer(
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: PremiumTheme.surfaceCard,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isGold ? PremiumTheme.goldAccent : Colors.white10, width: isGold ? 1.5 : 1),
-        ),
+        borderRadius: 20,
+        border: isGold ? Border.all(color: PremiumTheme.goldAccent, width: 1.5) : null,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -411,7 +396,7 @@ class _RoseBoutiqueScreenState extends ConsumerState<RoseBoutiqueScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: isGold ? PremiumTheme.goldAccent.withOpacity(0.15) : Colors.white10,
+                      color: isGold ? PremiumTheme.goldAccent.withOpacity(0.15) : PremiumTheme.goldBorder.withOpacity(0.5),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -451,13 +436,17 @@ class _RoseBoutiqueScreenState extends ConsumerState<RoseBoutiqueScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
-                gradient: isGold ? PremiumTheme.goldGradient : null,
-                color: isGold ? null : Colors.black38,
+                gradient: isGold ? PremiumTheme.buttonGradient : null,
+                color: isGold ? null : PremiumTheme.surfaceElevated,
+                border: isGold ? null : Border.all(color: PremiumTheme.goldBorder),
+                boxShadow: isGold
+                    ? [BoxShadow(color: PremiumTheme.goldAccent.withOpacity(0.35), blurRadius: 10, offset: const Offset(0, 3))]
+                    : null,
               ),
               child: Text(
                 price,
                 style: GoogleFonts.outfit(
-                  color: isGold ? PremiumTheme.primaryBgBlack : PremiumTheme.goldAccent,
+                  color: isGold ? Colors.white : PremiumTheme.goldAccent,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -485,14 +474,14 @@ class _RoseBoutiqueScreenState extends ConsumerState<RoseBoutiqueScreen> {
               style: GoogleFonts.cormorantGaramond(
                 fontSize: 26,
                 fontWeight: FontWeight.bold,
-                color: PremiumTheme.textWhite,
+                color: Colors.white,
               ),
             ),
             const SizedBox(height: 12),
             Text(
               'Your ad is playing to support matchmaking. Rewards will be issued shortly...',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(color: PremiumTheme.textSilver, fontSize: 13),
+              style: GoogleFonts.inter(color: Colors.white70, fontSize: 13),
             ),
             const SizedBox(height: 36),
 

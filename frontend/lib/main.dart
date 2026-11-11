@@ -1,7 +1,11 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'providers/auth_provider.dart';
+import 'providers/chat_provider.dart';
+import 'services/api_service.dart';
+import 'widgets/active_call_overlay.dart';
 import 'screens/login_screen.dart';
 import 'screens/otp_screen.dart';
 import 'screens/onboarding_screen.dart';
@@ -9,7 +13,9 @@ import 'screens/home_screen.dart';
 import 'screens/intro_video_screen.dart';
 import 'theme/premium_theme.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await ApiService.loadBaseUrl();
   runApp(
     const ProviderScope(
       child: MatrimonyApp(),
@@ -27,6 +33,45 @@ class MatrimonyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: PremiumTheme.lightTheme,
       home: const IntroVideoScreen(),
+      builder: (context, child) {
+        return Consumer(
+          builder: (context, ref, _) {
+            final chatState = ref.watch(chatProvider);
+            final authState = ref.watch(authProvider);
+            final currentUserId = authState.profile?['id'];
+            
+            return Stack(
+              children: [
+                if (child != null) child,
+                if (chatState.isInCall && chatState.callPartnerId != null && currentUserId != null)
+                  Positioned.fill(
+                    child: ActiveCallOverlay(
+                      partner: chatState.matches.firstWhere(
+                        (m) => m['partnerId'] == chatState.callPartnerId,
+                        orElse: () => null,
+                      )?['profile'] ?? {
+                        'id': chatState.callPartnerId,
+                        'name': chatState.callPartnerName ?? 'User',
+                        'photos': chatState.callPartnerPhoto != null ? [chatState.callPartnerPhoto] : [],
+                      },
+                      isIncoming: chatState.isIncomingCall,
+                      status: chatState.callStatus ?? 'dialing',
+                      onAccept: () {
+                        ref.read(chatProvider.notifier).acceptCall(chatState.callPartnerId!, currentUserId);
+                      },
+                      onDecline: () {
+                        ref.read(chatProvider.notifier).rejectCall(chatState.callPartnerId!, currentUserId);
+                      },
+                      onEnd: () {
+                        ref.read(chatProvider.notifier).endCall(currentUserId, chatState.callPartnerId!);
+                      },
+                    ),
+                  ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -70,7 +115,7 @@ class SplashLoadingScreen extends StatelessWidget {
       body: Container(
         decoration: const BoxDecoration(
           gradient: RadialGradient(
-            colors: [PremiumTheme.primaryBgDark, PremiumTheme.primaryBgBlack],
+            colors: [Color(0xFFFAF7F2), Color(0xFFF0E8DC)],
             center: Alignment.center,
             radius: 1.2,
           ),

@@ -6,8 +6,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import '../providers/auth_provider.dart';
+import '../providers/chat_provider.dart';
 import '../services/api_service.dart';
 import '../theme/premium_theme.dart';
+import '../widgets/aesthetic_background.dart';
+import '../widgets/glassmorphic_container.dart';
 
 
 
@@ -34,6 +37,7 @@ class _SettingsProfileScreenState extends ConsumerState<SettingsProfileScreen> {
   late TextEditingController _educationController;
   late TextEditingController _occupationController;
   late TextEditingController _familyController;
+  late TextEditingController _serverUrlController;
 
   DateTime? _selectedDob;
   String _selectedGender = 'MAN';
@@ -60,6 +64,7 @@ class _SettingsProfileScreenState extends ConsumerState<SettingsProfileScreen> {
     _educationController = TextEditingController();
     _occupationController = TextEditingController();
     _familyController = TextEditingController();
+    _serverUrlController = TextEditingController(text: ApiService.baseUrl);
   }
 
   @override
@@ -77,6 +82,7 @@ class _SettingsProfileScreenState extends ConsumerState<SettingsProfileScreen> {
     _educationController.dispose();
     _occupationController.dispose();
     _familyController.dispose();
+    _serverUrlController.dispose();
     super.dispose();
   }
 
@@ -330,11 +336,11 @@ class _SettingsProfileScreenState extends ConsumerState<SettingsProfileScreen> {
             TextField(
               controller: _aadhaarController,
               keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
+              style: GoogleFonts.inter(color: PremiumTheme.textWhite, fontSize: 14),
               decoration: const InputDecoration(
                 hintText: '0000 0000 0000',
                 hintStyle: TextStyle(color: PremiumTheme.textMuted),
-                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: PremiumTheme.goldBorder)),
                 focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: PremiumTheme.goldAccent)),
               ),
             ),
@@ -358,7 +364,7 @@ class _SettingsProfileScreenState extends ConsumerState<SettingsProfileScreen> {
                 }
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: PremiumTheme.goldAccent, foregroundColor: Colors.black),
+            style: ElevatedButton.styleFrom(backgroundColor: PremiumTheme.goldAccent, foregroundColor: Colors.white),
             child: const Text('Verify'),
           )
         ],
@@ -380,13 +386,15 @@ class _SettingsProfileScreenState extends ConsumerState<SettingsProfileScreen> {
     _initFieldsIfNeeded(profile);
 
     return Scaffold(
-      backgroundColor: PremiumTheme.primaryBgBlack,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      backgroundColor: Colors.transparent,
+      body: AestheticBackground(
+        verticalText: 'ACCOUNT',
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               // User profile header card
               Center(
                 child: Column(
@@ -446,13 +454,9 @@ class _SettingsProfileScreenState extends ConsumerState<SettingsProfileScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              Container(
+              GlassmorphicContainer(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: PremiumTheme.surfaceCard,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white10),
-                ),
+                borderRadius: 20,
                 child: Column(
                   children: [
                     // Aadhaar Verification status
@@ -473,7 +477,7 @@ class _SettingsProfileScreenState extends ConsumerState<SettingsProfileScreen> {
                               child: Text('Verify Now', style: GoogleFonts.inter(color: PremiumTheme.goldAccent)),
                             ),
                     ),
-                    const Divider(color: Colors.white10),
+                    const Divider(color: PremiumTheme.goldBorder),
 
                     // Selfie Face Verification status
                     ListTile(
@@ -529,13 +533,9 @@ class _SettingsProfileScreenState extends ConsumerState<SettingsProfileScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              Container(
+              GlassmorphicContainer(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: PremiumTheme.surfaceCard,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white10),
-                ),
+                borderRadius: 16,
                 child: SwitchListTile(
                   value: isPhoneVisible,
                   onChanged: (val) {
@@ -564,13 +564,9 @@ class _SettingsProfileScreenState extends ConsumerState<SettingsProfileScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              Container(
+              GlassmorphicContainer(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: PremiumTheme.surfaceCard,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white10),
-                ),
+                borderRadius: 16,
                 child: Column(
                   children: [
                     GridView.builder(
@@ -598,9 +594,9 @@ class _SettingsProfileScreenState extends ConsumerState<SettingsProfileScreen> {
                             onTap: _addGalleryPhoto,
                             child: Container(
                               decoration: BoxDecoration(
-                                color: Colors.black26,
+                                color: PremiumTheme.surfaceElevated,
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.white12, style: BorderStyle.solid),
+                                border: Border.all(color: PremiumTheme.goldBorder, style: BorderStyle.solid),
                               ),
                               child: const Icon(Icons.add_a_photo_outlined, color: PremiumTheme.goldAccent),
                             ),
@@ -624,13 +620,9 @@ class _SettingsProfileScreenState extends ConsumerState<SettingsProfileScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              Container(
+              GlassmorphicContainer(
                 padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: PremiumTheme.surfaceCard,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white10),
-                ),
+                borderRadius: 20,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -646,14 +638,14 @@ class _SettingsProfileScreenState extends ConsumerState<SettingsProfileScreen> {
                       controller: _dobController,
                       readOnly: true,
                       onTap: () => _selectDob(context),
-                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                      style: GoogleFonts.inter(color: PremiumTheme.textWhite, fontSize: 14),
                       decoration: _buildInputDecoration('Date of Birth', Icons.calendar_today),
                     ),
                     const SizedBox(height: 24),
 
                     Text(
                       'Astrological Coordinates',
-                      style: GoogleFonts.cormorantGaramond(fontSize: 18, fontWeight: FontWeight.bold, color: PremiumTheme.goldLight),
+                      style: GoogleFonts.cormorantGaramond(fontSize: 18, fontWeight: FontWeight.bold, color: PremiumTheme.goldAccent),
                     ),
                     const SizedBox(height: 12),
                     
@@ -664,7 +656,7 @@ class _SettingsProfileScreenState extends ConsumerState<SettingsProfileScreen> {
                       controller: _tobController,
                       readOnly: true,
                       onTap: () => _selectTob(context),
-                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                      style: GoogleFonts.inter(color: PremiumTheme.textWhite, fontSize: 14),
                       decoration: _buildInputDecoration('Time of Birth', Icons.access_time),
                     ),
                     const SizedBox(height: 16),
@@ -680,7 +672,7 @@ class _SettingsProfileScreenState extends ConsumerState<SettingsProfileScreen> {
 
                     Text(
                       'Cultural & Family Details',
-                      style: GoogleFonts.cormorantGaramond(fontSize: 18, fontWeight: FontWeight.bold, color: PremiumTheme.goldLight),
+                      style: GoogleFonts.cormorantGaramond(fontSize: 18, fontWeight: FontWeight.bold, color: PremiumTheme.goldAccent),
                     ),
                     const SizedBox(height: 12),
                     _buildTextField('Sub-Caste / Caste', _subCasteController, Icons.palette),
@@ -717,14 +709,81 @@ class _SettingsProfileScreenState extends ConsumerState<SettingsProfileScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: PremiumTheme.primaryBgBlack,
+                        color: Colors.white,
                       ),
                     ),
                   ),
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const Divider(color: PremiumTheme.goldBorder, height: 48),
+
+              Text(
+                'DEVELOPER API SETTINGS',
+                style: GoogleFonts.cormorantGaramond(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: PremiumTheme.goldAccent,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              GlassmorphicContainer(
+                padding: const EdgeInsets.all(16),
+                borderRadius: 16,
+                border: Border.all(color: PremiumTheme.goldAccent.withOpacity(0.15)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'API Server URL',
+                      style: GoogleFonts.inter(fontSize: 13, color: PremiumTheme.textSilver),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _serverUrlController,
+                      style: GoogleFonts.inter(color: PremiumTheme.textWhite, fontSize: 14),
+                      decoration: _buildInputDecoration('https://example.ngrok-free.dev', Icons.link_rounded),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 44,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final newUrl = _serverUrlController.text.trim();
+                          if (newUrl.isNotEmpty) {
+                            await ApiService.saveBaseUrl(newUrl);
+                            final authState = ref.read(authProvider);
+                            if (authState.profile != null) {
+                              ref.read(chatProvider.notifier).disconnectSocket();
+                              ref.read(chatProvider.notifier).initSocket(authState.profile!['id']);
+                            }
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('API Server URL updated & Socket reconnected! 🚀'),
+                                backgroundColor: PremiumTheme.goldAccent,
+                              ),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: PremiumTheme.goldAccent,
+                          foregroundColor: PremiumTheme.primaryBgBlack,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        child: Text(
+                          'Save & Reconnect Socket',
+                          style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 32),
 
               // Logout Button
               SizedBox(
@@ -746,6 +805,7 @@ class _SettingsProfileScreenState extends ConsumerState<SettingsProfileScreen> {
               const SizedBox(height: 48),
             ],
           ),
+         ),
         ),
       ),
     );
@@ -762,7 +822,7 @@ class _SettingsProfileScreenState extends ConsumerState<SettingsProfileScreen> {
         const SizedBox(height: 6),
         TextFormField(
           controller: controller,
-          style: const TextStyle(color: Colors.white, fontSize: 14),
+          style: GoogleFonts.inter(color: PremiumTheme.textWhite, fontSize: 14),
           decoration: _buildInputDecoration(label, icon),
         ),
       ],
@@ -775,10 +835,10 @@ class _SettingsProfileScreenState extends ConsumerState<SettingsProfileScreen> {
       hintStyle: const TextStyle(color: PremiumTheme.textMuted, fontSize: 13),
       prefixIcon: Icon(icon, color: PremiumTheme.goldAccent, size: 18),
       filled: true,
-      fillColor: Colors.black26,
+      fillColor: PremiumTheme.surfaceElevated,
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.white10),
+        borderSide: const BorderSide(color: PremiumTheme.goldBorder),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),

@@ -167,3 +167,45 @@ exports.chatbotMessage = async (req, res) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+// Get Call History
+exports.getCallHistory = async (req, res) => {
+  try {
+    const userId = String(req.user.id);
+
+    const callLogs = await prisma.call_logs.findMany({
+      where: {
+        OR: [
+          { caller_id: userId },
+          { receiver_id: userId }
+        ]
+      },
+      orderBy: { created_at: 'desc' }
+    });
+
+    const partnerIds = [...new Set(callLogs.flatMap(log => [log.caller_id, log.receiver_id]))].filter(id => id !== userId);
+
+    const partners = await prisma.users.findMany({
+      where: { id: { in: partnerIds } }
+    });
+
+    const partnerMap = new Map(partners.map(p => [p.id, mapUserToProfile(p)]).filter(x => x[1] !== null));
+
+    const enrichedLogs = callLogs.map(log => {
+      const partnerId = log.caller_id === userId ? log.receiver_id : log.caller_id;
+      return {
+        id: log.id,
+        isOutgoing: log.caller_id === userId,
+        status: log.status,
+        duration: log.duration,
+        created_at: log.created_at,
+        partner: partnerMap.get(partnerId) || { id: partnerId, name: 'User', photos: [] }
+      };
+    });
+
+    return res.status(200).json(enrichedLogs);
+  } catch (error) {
+    console.error('Error fetching call history:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};

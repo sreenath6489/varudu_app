@@ -1,8 +1,10 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/auth_provider.dart';
 import '../theme/premium_theme.dart';
+import '../widgets/aesthetic_background.dart';
 
 class OtpScreen extends ConsumerStatefulWidget {
   const OtpScreen({super.key});
@@ -14,10 +16,12 @@ class OtpScreen extends ConsumerStatefulWidget {
 class _OtpScreenState extends ConsumerState<OtpScreen> {
   final _formKey = GlobalKey<FormState>();
   final _otpController = TextEditingController();
+  final _otpFocusNode = FocusNode();
 
   @override
   void dispose() {
     _otpController.dispose();
+    _otpFocusNode.dispose();
     super.dispose();
   }
 
@@ -31,13 +35,13 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
 
-    // Listen to errors
+    // Listen to error notifications
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next.errorMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.errorMessage!),
-            backgroundColor: PremiumTheme.crimsonRed,
+            backgroundColor: PremiumTheme.goldAccent,
           ),
         );
         ref.read(authProvider.notifier).clearError();
@@ -45,187 +49,429 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     });
 
     final isLoading = authState.status == AuthStatus.loading;
+    final size = MediaQuery.of(context).size;
+    final isTablet = size.width > 600;
 
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: RadialGradient(
-            colors: [PremiumTheme.primaryBgDark, PremiumTheme.primaryBgBlack],
-            center: Alignment.center,
-            radius: 1.2,
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 28.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Shield Lock Icon in Gold
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: PremiumTheme.surfaceCard,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: PremiumTheme.goldAccent, width: 2),
-                        boxShadow: [
-                          BoxShadow(
-                            color: PremiumTheme.goldAccent.withOpacity(0.15),
-                            blurRadius: 20,
-                            spreadRadius: 5,
-                          )
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.lock_person_outlined,
-                        size: 52,
-                        color: PremiumTheme.goldAccent,
-                      ),
+    return AestheticBackground(
+      verticalText: 'VERIFY',
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // 1. Top Navigation Brand Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'VARUDU',
+                    style: GoogleFonts.syne(
+                      fontSize: isTablet ? 24 : 18,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -1.0,
+                      color: PremiumTheme.textWhite,
                     ),
-                    const SizedBox(height: 36),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      ref.read(authProvider.notifier).logout();
+                    },
+                    icon: const Icon(Icons.arrow_back, color: PremiumTheme.textWhite, size: 22),
+                  ),
+                ],
+              ),
+            ),
 
-                    // Header
-                    Text(
-                      'Verification Code',
-                      style: GoogleFonts.cormorantGaramond(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: PremiumTheme.textWhite,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Subtitle
-                    Text(
-                      'We sent a 4-digit code to\n${authState.email ?? ""}',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        color: PremiumTheme.textSilver,
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Mock hint
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: PremiumTheme.surfaceCard,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        'For testing, enter code: 1234',
-                        style: GoogleFonts.inter(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.bold,
-                          color: PremiumTheme.goldAccent,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 48),
-
-                    // OTP Entry Field
-                    TextFormField(
-                      controller: _otpController,
-                      keyboardType: TextInputType.number,
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 8,
-                        color: PremiumTheme.textWhite,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: '0000',
-                        hintStyle: TextStyle(
-                          color: Colors.grey.shade700,
-                          letterSpacing: 8,
-                        ),
-                        filled: true,
-                        fillColor: PremiumTheme.surfaceCard,
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(color: Colors.grey.shade800),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(color: PremiumTheme.goldAccent, width: 1.5),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 18),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Please enter OTP';
-                        }
-                        if (value.trim().length != 4) {
-                          return 'OTP must be 4 digits';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 28),
-
-                    // Verify Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 54,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(27),
-                          gradient: PremiumTheme.goldGradient,
-                        ),
-                        child: ElevatedButton(
-                          onPressed: isLoading ? null : _submit,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            shadowColor: Colors.transparent,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(27),
-                            ),
-                          ),
-                          child: isLoading
-                              ? const SizedBox(
-                                  height: 24,
-                                  width: 24,
-                                  child: CircularProgressIndicator(
-                                    color: PremiumTheme.primaryBgBlack,
-                                    strokeWidth: 2,
+            // 2. Main OTP Form Area
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 400),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        // Glassmorphic card shifted right
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: FractionallySizedBox(
+                            widthFactor: 0.88,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: PremiumTheme.surfaceCard.withOpacity(0.85),
+                                borderRadius: BorderRadius.circular(20.0),
+                                border: Border.all(
+                                  color: PremiumTheme.goldBorder,
+                                  width: 1.5,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: PremiumTheme.textWhite.withOpacity(0.04),
+                                    blurRadius: 40,
+                                    offset: const Offset(0, 20),
                                   ),
-                                )
-                              : Text(
-                                  'Verify & Continue',
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: PremiumTheme.primaryBgBlack,
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(20.0),
+                                child: BackdropFilter(
+                                  filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 24.0,
+                                      vertical: 36.0,
+                                    ),
+                                    child: Form(
+                                      key: _formKey,
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'SECURITY',
+                                            style: GoogleFonts.hankenGrotesk(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w700,
+                                              letterSpacing: 1.5,
+                                              color: PremiumTheme.textWhite.withOpacity(0.5),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            'Verify Code.',
+                                            style: GoogleFonts.cormorantGaramond(
+                                              fontSize: 28,
+                                              fontWeight: FontWeight.w700,
+                                              color: PremiumTheme.textWhite,
+                                              height: 1.1,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Text(
+                                            'We sent a 4-digit code to\n${authState.email ?? "your device"}',
+                                            style: GoogleFonts.hankenGrotesk(
+                                              fontSize: 13,
+                                              color: PremiumTheme.textWhite.withOpacity(0.6),
+                                              height: 1.4,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 24),
+
+                                          // Mock verification banner
+                                          Container(
+                                            width: double.infinity,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 14,
+                                              vertical: 10,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: PremiumTheme.textWhite.withOpacity(0.03),
+                                              borderRadius: BorderRadius.circular(10),
+                                              border: Border.all(
+                                                color: PremiumTheme.textWhite.withOpacity(0.05),
+                                              ),
+                                            ),
+                                            child: Text(
+                                              'For testing, enter code: 1234',
+                                              textAlign: TextAlign.center,
+                                              style: GoogleFonts.hankenGrotesk(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w800,
+                                                color: PremiumTheme.textWhite.withOpacity(0.7),
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 28),
+
+                                          // OTP Entry Field
+                                          AnimatedSlideField(
+                                            focusNode: _otpFocusNode,
+                                            child: TextFormField(
+                                              controller: _otpController,
+                                              focusNode: _otpFocusNode,
+                                              keyboardType: TextInputType.number,
+                                              textAlign: TextAlign.center,
+                                              style: GoogleFonts.hankenGrotesk(
+                                                fontSize: 24,
+                                                fontWeight: FontWeight.w800,
+                                                letterSpacing: 8,
+                                                color: PremiumTheme.textWhite,
+                                              ),
+                                              decoration: InputDecoration(
+                                                hintText: '0000',
+                                                hintStyle: GoogleFonts.hankenGrotesk(
+                                                  color: PremiumTheme.textWhite.withOpacity(0.2),
+                                                  letterSpacing: 8,
+                                                ),
+                                                contentPadding: const EdgeInsets.symmetric(
+                                                  vertical: 12,
+                                                ),
+                                                enabledBorder: UnderlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                    color: PremiumTheme.textWhite.withOpacity(0.12),
+                                                  ),
+                                                ),
+                                                focusedBorder: const UnderlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                    color: PremiumTheme.textWhite,
+                                                    width: 1.5,
+                                                  ),
+                                                ),
+                                                errorBorder: const UnderlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                    color: PremiumTheme.textWhite,
+                                                    width: 1.5,
+                                                  ),
+                                                ),
+                                                focusedErrorBorder: const UnderlineInputBorder(
+                                                  borderSide: BorderSide(
+                                                    color: PremiumTheme.textWhite,
+                                                    width: 2.0,
+                                                  ),
+                                                ),
+                                              ),
+                                              validator: (value) {
+                                                if (value == null || value.trim().isEmpty) {
+                                                  return 'Please enter OTP';
+                                                }
+                                                if (value.trim().length != 4) {
+                                                  return 'OTP must be 4 digits';
+                                                }
+                                                return null;
+                                              },
+                                            ),
+                                          ),
+                                          const SizedBox(height: 24),
+                                        ],
+                                      ),
+                                    ),
                                   ),
                                 ),
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
 
-                    // Back Button
-                    TextButton(
-                      onPressed: () {
-                        ref.read(authProvider.notifier).logout();
-                      },
-                      child: Text(
-                        'Change Account Detail',
-                        style: GoogleFonts.inter(
-                          color: PremiumTheme.crimsonRed,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                        // Overlapping Pulsing FAB at bottom right
+                        Positioned(
+                          right: 12,
+                          bottom: -32,
+                          child: PulsingFab(
+                            onPressed: _submit,
+                            isLoading: isLoading,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // 3. Bottom Utility Footer
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'COLLECTION 2026',
+                        style: GoogleFonts.hankenGrotesk(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: PremiumTheme.textWhite.withOpacity(0.4),
+                          letterSpacing: 1.0,
                         ),
                       ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Wrong details?',
+                        style: GoogleFonts.hankenGrotesk(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: PremiumTheme.textWhite,
+                        ),
+                      ),
+                    ],
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      ref.read(authProvider.notifier).logout();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: PremiumTheme.goldAccent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      elevation: 0,
                     ),
+                    child: Text(
+                      'CHANGE ACCOUNT',
+                      style: GoogleFonts.hankenGrotesk(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // 4. Bottom Decorative Line
+            Container(
+              height: 4,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    PremiumTheme.goldBorder,
+                    PremiumTheme.goldAccent,
+                    PremiumTheme.goldBorder,
                   ],
                 ),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Micro-interaction: Slides input text field to the right on focus
+class AnimatedSlideField extends StatefulWidget {
+  final FocusNode focusNode;
+  final Widget child;
+
+  const AnimatedSlideField({
+    super.key,
+    required this.focusNode,
+    required this.child,
+  });
+
+  @override
+  State<AnimatedSlideField> createState() => _AnimatedSlideFieldState();
+}
+
+class _AnimatedSlideFieldState extends State<AnimatedSlideField> {
+  bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.focusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void dispose() {
+    widget.focusNode.removeListener(_onFocusChange);
+    super.dispose();
+  }
+
+  void _onFocusChange() {
+    if (mounted) {
+      setState(() {
+        _isFocused = widget.focusNode.hasFocus;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: const Cubic(0.16, 1.0, 0.3, 1.0),
+      transform: Matrix4.translationValues(_isFocused ? 8.0 : 0.0, 0.0, 0.0),
+      child: widget.child,
+    );
+  }
+}
+
+// Pulse animation for the Floating Action Button (FAB)
+class PulsingFab extends StatefulWidget {
+  final VoidCallback onPressed;
+  final bool isLoading;
+
+  const PulsingFab({
+    super.key,
+    required this.onPressed,
+    required this.isLoading,
+  });
+
+  @override
+  State<PulsingFab> createState() => _PulsingFabState();
+}
+
+class _PulsingFabState extends State<PulsingFab> with SingleTickerProviderStateMixin {
+  late final AnimationController _pulseController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: Tween<double>(begin: 0.95, end: 1.05).animate(
+        CurvedAnimation(
+          parent: _pulseController,
+          curve: Curves.easeInOut,
+        ),
+      ),
+      child: Container(
+        width: 72,
+        height: 72,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: PremiumTheme.textWhite,
+          boxShadow: [
+            BoxShadow(
+              color: PremiumTheme.textWhite.withOpacity(0.08),
+              blurRadius: 20,
+              spreadRadius: 2,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: widget.isLoading ? null : widget.onPressed,
+            child: Center(
+              child: widget.isLoading
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2.5,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.arrow_forward,
+                      color: Colors.white,
+                      size: 28,
+                    ),
             ),
           ),
         ),

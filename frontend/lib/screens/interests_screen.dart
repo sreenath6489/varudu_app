@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
+import '../theme/premium_theme.dart';
+import '../widgets/aesthetic_background.dart';
 
 class InterestsScreen extends ConsumerStatefulWidget {
   const InterestsScreen({super.key});
@@ -47,24 +50,31 @@ class _InterestsScreenState extends ConsumerState<InterestsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: const Text(
-          'Interests',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+        title: Text(
+          'INTERESTS',
+          style: GoogleFonts.cormorantGaramond(
+            fontWeight: FontWeight.bold,
+            color: PremiumTheme.textWhite,
+            fontSize: 22,
+          ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(color: PremiumTheme.textWhite),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: Colors.blue))
-          : _errorMessage.isNotEmpty
-              ? Center(child: Text(_errorMessage, style: const TextStyle(color: Colors.red)))
-              : _interestedProfiles.isEmpty
-                  ? _buildEmptyState()
-                  : _buildGrid(),
+      body: AestheticBackground(
+        verticalText: 'INTERESTS',
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: PremiumTheme.goldAccent))
+            : _errorMessage.isNotEmpty
+                ? Center(child: Text(_errorMessage, style: GoogleFonts.inter(color: PremiumTheme.crimsonRed)))
+                : _interestedProfiles.isEmpty
+                    ? _buildEmptyState()
+                    : _buildGrid(),
+      ),
     );
   }
 
@@ -74,35 +84,36 @@ class _InterestsScreenState extends ConsumerState<InterestsScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
-              color: Colors.blue.shade50,
+              color: PremiumTheme.goldAccent.withOpacity(0.1),
               shape: BoxShape.circle,
+              border: Border.all(color: PremiumTheme.goldAccent.withOpacity(0.2)),
             ),
             child: const Icon(
               Icons.favorite_border_rounded,
               size: 48,
-              color: Colors.blue,
+              color: PremiumTheme.goldAccent,
             ),
           ),
           const SizedBox(height: 20),
-          const Text(
+          Text(
             'No Interests Yet',
-            style: TextStyle(
-              fontSize: 18,
+            style: GoogleFonts.cormorantGaramond(
+              fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: PremiumTheme.textWhite,
             ),
           ),
           const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40.0),
             child: Text(
-              'Profiles you double-tap or like on the Reels screen will appear here.',
+              'Profiles you double-tap or send roses to on the Reels screen will appear here.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: PremiumTheme.textSilver,
                 height: 1.4,
               ),
             ),
@@ -133,13 +144,14 @@ class _InterestsScreenState extends ConsumerState<InterestsScreen> {
 
         return Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: PremiumTheme.surfaceCard,
             borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: PremiumTheme.goldBorder),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 6,
-                offset: const Offset(0, 3),
+                color: const Color(0xFF6E522E).withOpacity(0.08),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -169,9 +181,9 @@ class _InterestsScreenState extends ConsumerState<InterestsScreen> {
                         colors: [
                           Colors.transparent,
                           Colors.transparent,
-                          Colors.black.withOpacity(0.7),
+                          Colors.black.withOpacity(0.75),
                         ],
-                        stops: const [0.0, 0.6, 1.0],
+                        stops: const [0.0, 0.55, 1.0],
                       ),
                     ),
                   ),
@@ -187,9 +199,9 @@ class _InterestsScreenState extends ConsumerState<InterestsScreen> {
                     children: [
                       Text(
                         '${profile['name']}, ${profile['age']}',
-                        style: const TextStyle(
+                        style: GoogleFonts.cormorantGaramond(
                           color: Colors.white,
-                          fontSize: 15,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                         maxLines: 1,
@@ -207,9 +219,9 @@ class _InterestsScreenState extends ConsumerState<InterestsScreen> {
                           Expanded(
                             child: Text(
                               profile['city'] ?? '',
-                              style: const TextStyle(
+                              style: GoogleFonts.inter(
                                 color: Colors.white70,
-                                fontSize: 12,
+                                fontSize: 11,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -227,13 +239,14 @@ class _InterestsScreenState extends ConsumerState<InterestsScreen> {
                   right: 10,
                   child: Container(
                     padding: const EdgeInsets.all(6),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
+                    decoration: BoxDecoration(
+                      color: PremiumTheme.surfaceCard,
                       shape: BoxShape.circle,
+                      border: Border.all(color: PremiumTheme.goldBorder),
                     ),
                     child: const Icon(
                       Icons.favorite_rounded,
-                      color: Colors.redAccent,
+                      color: PremiumTheme.crimsonRed,
                       size: 14,
                     ),
                   ),
@@ -248,12 +261,12 @@ class _InterestsScreenState extends ConsumerState<InterestsScreen> {
 
   Widget _buildDefaultPlaceholder() {
     return Container(
-      color: Colors.grey.shade100,
+      color: PremiumTheme.surfaceElevated,
       alignment: Alignment.center,
-      child: Icon(
+      child: const Icon(
         Icons.person_rounded,
         size: 52,
-        color: Colors.grey.shade300,
+        color: PremiumTheme.goldLight,
       ),
     );
   }

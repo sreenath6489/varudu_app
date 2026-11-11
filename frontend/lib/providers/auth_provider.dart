@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/api_service.dart';
+import 'chat_provider.dart';
 
 enum AuthStatus {
   initial,
@@ -50,8 +51,9 @@ final apiServiceProvider = Provider<ApiService>((ref) {
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final ApiService _apiService;
+  final Ref _ref;
 
-  AuthNotifier(this._apiService) : super(AuthState.initial()) {
+  AuthNotifier(this._apiService, this._ref) : super(AuthState.initial()) {
     _checkSavedAuth();
   }
 
@@ -276,6 +278,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   // Logout
   Future<void> logout() async {
     await _apiService.logout();
+    _ref.read(chatProvider.notifier).disconnectSocket();
     state = AuthState(status: AuthStatus.unauthenticated);
   }
 
@@ -288,5 +291,5 @@ class AuthNotifier extends StateNotifier<AuthState> {
 // Global Auth State Provider
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final apiService = ref.read(apiServiceProvider);
-  return AuthNotifier(apiService);
+  return AuthNotifier(apiService, ref);
 });

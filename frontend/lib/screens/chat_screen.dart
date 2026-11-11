@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,8 +8,11 @@ import '../providers/auth_provider.dart';
 import '../providers/chat_provider.dart';
 import '../services/api_service.dart';
 import '../theme/premium_theme.dart';
+import 'call_history_screen.dart';
 import 'astro_match_screen.dart';
 import 'rose_boutique_screen.dart';
+import '../widgets/aesthetic_background.dart';
+import '../widgets/glassmorphic_container.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   const ChatScreen({super.key});
@@ -39,10 +41,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: PremiumTheme.primaryBgBlack,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return const ChatbotConsoleSheet();
       },
@@ -52,114 +51,102 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final chatState = ref.watch(chatProvider);
-    final authState = ref.watch(authProvider);
-
-    // Check if there is an incoming call
-    if (chatState.isInCall && chatState.isIncomingCall && chatState.callPartnerId != null) {
-      final callerId = chatState.callPartnerId;
-      final match = chatState.matches.firstWhere(
-        (m) => m['partnerId'] == callerId,
-        orElse: () => null,
-      );
-      if (match != null) {
-        final callerProfile = match['profile'];
-        return ActiveCallOverlay(
-          partner: callerProfile,
-          isIncoming: true,
-          status: chatState.callStatus ?? 'ringing',
-          onAccept: () {
-            ref.read(chatProvider.notifier).acceptCall(callerId!, authState.profile!['id']);
-          },
-          onDecline: () {
-            ref.read(chatProvider.notifier).rejectCall(callerId!, authState.profile!['id']);
-          },
-          onEnd: () {
-            ref.read(chatProvider.notifier).endCall(authState.profile!['id'], callerId!);
-          },
-        );
-      }
-    }
-
-    final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: PremiumTheme.primaryBgBlack,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         title: Text(
           'MATCH CHATS',
           style: GoogleFonts.cormorantGaramond(fontWeight: FontWeight.bold, color: PremiumTheme.textWhite),
         ),
-      ),
-      body: Stack(
-        children: [
-          // Main chats lists
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 1. Matches horizontal Checklist Row
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
-                child: Text(
-                  'New Connections',
-                  style: GoogleFonts.cormorantGaramond(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: PremiumTheme.goldAccent,
-                  ),
-                ),
-              ),
-              _buildMatchesRow(chatState.matches),
-
-              const Divider(color: Colors.white10, height: 32),
-
-              // 2. Active Chat Rooms List
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text(
-                  'Conversations',
-                  style: GoogleFonts.cormorantGaramond(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: PremiumTheme.goldAccent,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: _buildConversationsList(chatState.matches),
-              ),
-            ],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.phone_callback_rounded, color: PremiumTheme.goldAccent),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CallHistoryScreen()),
+              );
+            },
           ),
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: AestheticBackground(
+        verticalText: 'CHATS',
+        child: Stack(
+          children: [
+            // Main chats lists
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. Matches horizontal Checklist Row
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
+                  child: Text(
+                    'New Connections',
+                    style: GoogleFonts.cormorantGaramond(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: PremiumTheme.goldAccent,
+                    ),
+                  ),
+                ),
+                _buildMatchesRow(chatState.matches),
 
-          // Draggable floating circular AI Bot icon
-          Positioned(
-            left: _botButtonOffset.dx,
-            bottom: _botButtonOffset.dy,
-            child: Draggable(
-              feedback: _buildBotFloatingIcon(opacity: 0.8),
-              childWhenDragging: const SizedBox(),
-              onDragEnd: (details) {
-                final screenHeight = MediaQuery.of(context).size.height;
-                final screenWidth = MediaQuery.of(context).size.width;
-                // Keep inside screen constraints
-                double newX = details.offset.dx;
-                double newY = screenHeight - details.offset.dy - 60; // invert y for bottom positioning
-                if (newX < 10) newX = 10;
-                if (newX > screenWidth - 70) newX = screenWidth - 70;
-                if (newY < 10) newY = 10;
-                if (newY > screenHeight - 120) newY = screenHeight - 120;
+                const Divider(color: PremiumTheme.goldLight, height: 32),
 
-                setState(() {
-                  _botButtonOffset = Offset(newX, newY);
-                });
-              },
-              child: GestureDetector(
-                onTap: _openChatbotConsole,
-                child: _buildBotFloatingIcon(),
+                // 2. Active Chat Rooms List
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text(
+                    'Conversations',
+                    style: GoogleFonts.cormorantGaramond(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: PremiumTheme.goldAccent,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: _buildConversationsList(chatState.matches),
+                ),
+              ],
+            ),
+
+            // Draggable floating circular AI Bot icon
+            Positioned(
+              left: _botButtonOffset.dx,
+              bottom: _botButtonOffset.dy,
+              child: Draggable(
+                feedback: _buildBotFloatingIcon(opacity: 0.8),
+                childWhenDragging: const SizedBox(),
+                onDragEnd: (details) {
+                  final screenHeight = MediaQuery.of(context).size.height;
+                  final screenWidth = MediaQuery.of(context).size.width;
+                  // Keep inside screen constraints
+                  double newX = details.offset.dx;
+                  double newY = screenHeight - details.offset.dy - 60; // invert y for bottom positioning
+                  if (newX < 10) newX = 10;
+                  if (newX > screenWidth - 70) newX = screenWidth - 70;
+                  if (newY < 10) newY = 10;
+                  if (newY > screenHeight - 120) newY = screenHeight - 120;
+
+                  setState(() {
+                    _botButtonOffset = Offset(newX, newY);
+                  });
+                },
+                child: GestureDetector(
+                  onTap: _openChatbotConsole,
+                  child: _buildBotFloatingIcon(),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -182,7 +169,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 spreadRadius: 2,
               )
             ],
-            border: Border.all(color: PremiumTheme.primaryBgBlack, width: 1.5),
+            border: Border.all(color: PremiumTheme.surfaceCard, width: 1.5),
           ),
           alignment: Alignment.center,
           child: const Text('🤖', style: TextStyle(fontSize: 26)),
@@ -240,9 +227,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                                   imageUrl: photoUrl,
                                   fit: BoxFit.cover,
                                   placeholder: (context, url) => const CircularProgressIndicator(strokeWidth: 2),
-                                  errorWidget: (context, url, err) => Container(color: Colors.grey.shade900),
+                                  errorWidget: (context, url, err) => Container(color: PremiumTheme.surfaceElevated, child: const Icon(Icons.person, color: PremiumTheme.goldLight)),
                                 )
-                              : Container(color: Colors.grey.shade900),
+                              : Container(color: PremiumTheme.surfaceElevated, child: const Icon(Icons.person, color: PremiumTheme.goldLight)),
                         ),
                       ),
                       Positioned(
@@ -254,13 +241,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           decoration: BoxDecoration(
                             color: isUnlocked ? Colors.green : PremiumTheme.goldAccent,
                             shape: BoxShape.circle,
-                            border: Border.all(color: PremiumTheme.primaryBgBlack, width: 1.5),
+                            border: Border.all(color: PremiumTheme.surfaceCard, width: 1.5),
                           ),
                           alignment: Alignment.center,
                           child: Icon(
                             isUnlocked ? Icons.circle : Icons.lock,
                             size: 10,
-                            color: isUnlocked ? Colors.transparent : PremiumTheme.primaryBgBlack,
+                            color: isUnlocked ? Colors.transparent : Colors.white,
                           ),
                         ),
                       ),
@@ -305,13 +292,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ? (photos[0].startsWith('http') ? photos[0] : '${ApiService.baseUrl}${photos[0]}')
             : '';
 
-        return Container(
+        return GlassmorphicContainer(
           margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: PremiumTheme.surfaceCard,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white10),
-          ),
+          borderRadius: 16,
           child: ListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             onTap: () => _openChatRoom(matchItem),
@@ -327,7 +310,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             imageUrl: photoUrl,
                             fit: BoxFit.cover,
                           )
-                        : Container(color: Colors.grey.shade900),
+                        : Container(color: PremiumTheme.surfaceElevated, child: const Icon(Icons.person, color: PremiumTheme.goldLight)),
                   ),
                 ),
                 Positioned(
@@ -339,13 +322,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     decoration: BoxDecoration(
                       color: isUnlocked ? Colors.green : PremiumTheme.goldAccent,
                       shape: BoxShape.circle,
-                      border: Border.all(color: PremiumTheme.primaryBgBlack, width: 1.5),
+                      border: Border.all(color: PremiumTheme.surfaceCard, width: 1.5),
                     ),
                     alignment: Alignment.center,
                     child: Icon(
                       isUnlocked ? Icons.circle : Icons.lock,
                       size: 9,
-                      color: isUnlocked ? Colors.transparent : PremiumTheme.primaryBgBlack,
+                      color: isUnlocked ? Colors.transparent : Colors.white,
                     ),
                   ),
                 ),
@@ -451,6 +434,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
             message: text,
           );
       _msgController.clear();
+      setState(() {});
       _scrollToBottom();
     }
   }
@@ -541,8 +525,10 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     final isTypingPartner = chatState.isTyping && chatState.typingUser == partner['id'];
 
     return Scaffold(
-      backgroundColor: PremiumTheme.primaryBgBlack,
+      backgroundColor: PremiumTheme.primaryBgLight,
       appBar: AppBar(
+        backgroundColor: PremiumTheme.surfaceCard,
+        elevation: 0.5,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
           onPressed: () => Navigator.pop(context),
@@ -580,18 +566,23 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
           ],
         ),
         actions: [
-          // 1. Audio Call Icon (visible only if connection is fully unlocked)
           if (isUnlocked)
             IconButton(
               icon: const Icon(Icons.phone_rounded, color: PremiumTheme.goldAccent),
               onPressed: () {
                 final myName = authState.profile?['name'] ?? 'User';
                 final myPhoto = authState.profile?['photoUrl'] ?? '';
+                final partnerName = partner['name'] ?? 'User';
+                final partnerPhoto = (partner['photos'] as List<dynamic>?)?.isNotEmpty == true
+                    ? (partner['photos'] as List<dynamic>)[0] as String
+                    : '';
                 ref.read(chatProvider.notifier).dialCall(
                   senderId: currentUserId,
                   receiverId: partnerId,
                   senderName: myName,
                   senderPhoto: myPhoto,
+                  partnerName: partnerName,
+                  partnerPhoto: partnerPhoto,
                 );
               },
             ),
@@ -625,7 +616,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                     children: [
                       // Messages lists
                       Expanded(
-                        child: chatState.isLoading
+                        child: chatState.isHistoryLoading
                             ? const Center(child: CircularProgressIndicator(color: PremiumTheme.goldAccent))
                             : ListView.builder(
                                 controller: _scrollController,
@@ -666,7 +657,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                           children: [
                             // Add attachments
                             IconButton(
-                              icon: const Icon(Icons.add_photo_alternate_outlined, color: Colors.black87),
+                              icon: const Icon(Icons.add_photo_alternate_outlined, color: PremiumTheme.goldAccent),
                               onPressed: _sendImageAttachment,
                             ),
 
@@ -682,6 +673,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                                   controller: _msgController,
                                   style: const TextStyle(color: Colors.black),
                                   onChanged: (val) {
+                                    setState(() {});
                                     if (authState.profile != null) {
                                       ref.read(chatProvider.notifier).sendTypingIndicator(
                                         authState.profile!['id'],
@@ -712,11 +704,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                                         color: Color(0xFFF2F2F7),
                                         shape: BoxShape.circle,
                                       ),
-                                      child: const Icon(Icons.mic, color: Colors.black87),
+                                      child: const Icon(Icons.mic, color: PremiumTheme.goldAccent),
                                     ),
                                   )
                                 : IconButton(
-                                    icon: const Icon(Icons.send_rounded, color: Colors.black87),
+                                    icon: const Icon(Icons.send_rounded, color: PremiumTheme.goldAccent),
                                     onPressed: _sendMessage,
                                   ),
                           ],
@@ -725,25 +717,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                     ],
                   ),
           ),
-
-          // In-App Calling Screen Overlay (dialing, ringing, active call states)
-          if (chatState.isInCall && (chatState.callPartnerId == partnerId || chatState.isIncomingCall))
-            Positioned.fill(
-              child: ActiveCallOverlay(
-                partner: partner,
-                isIncoming: chatState.isIncomingCall,
-                status: chatState.callStatus ?? 'dialing',
-                onAccept: () {
-                  ref.read(chatProvider.notifier).acceptCall(partnerId, currentUserId);
-                },
-                onDecline: () {
-                  ref.read(chatProvider.notifier).rejectCall(partnerId, currentUserId);
-                },
-                onEnd: () {
-                  ref.read(chatProvider.notifier).endCall(currentUserId, partnerId);
-                },
-              ),
-            ),
         ],
       ),
     );
@@ -759,7 +732,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
-      color: PremiumTheme.primaryBgBlack,
+      color: PremiumTheme.primaryBgLight,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -768,7 +741,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.05),
+              color: PremiumTheme.surfaceElevated,
               border: Border.all(color: PremiumTheme.goldAccent.withOpacity(0.2), width: 1.5),
             ),
             child: Icon(
@@ -811,8 +784,8 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white10),
-                color: Colors.white.withOpacity(0.02),
+                border: Border.all(color: PremiumTheme.goldBorder),
+                color: PremiumTheme.surfaceElevated,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -838,7 +811,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
                 onPressed: () => _unlockChatAction(interestId, userRoses),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: PremiumTheme.goldAccent,
-                  foregroundColor: PremiumTheme.primaryBgBlack,
+                  foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   elevation: 4,
                 ),
@@ -927,13 +900,22 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isMe ? Colors.black : Colors.grey.shade800,
+          gradient: isMe ? PremiumTheme.buttonGradient : null,
+          color: isMe ? null : PremiumTheme.surfaceCard,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
             bottomLeft: Radius.circular(isMe ? 16 : 2),
             bottomRight: Radius.circular(isMe ? 2 : 16),
           ),
+          border: isMe ? null : Border.all(color: PremiumTheme.goldBorder, width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF6E522E).withOpacity(isMe ? 0.2 : 0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
         child: Column(
@@ -943,7 +925,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
             Text(
               text,
               style: GoogleFonts.inter(
-                color: Colors.white,
+                color: isMe ? Colors.white : PremiumTheme.textWhite,
                 fontSize: 14,
                 fontWeight: isMe ? FontWeight.w600 : FontWeight.normal,
               ),
@@ -955,15 +937,15 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
               children: [
                 Text(
                   '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 9,
-                    color: Colors.white60,
+                    color: isMe ? Colors.white70 : PremiumTheme.textMuted,
                   ),
                 ),
                 if (isMe)
                   const Padding(
                     padding: EdgeInsets.only(left: 4.0),
-                    child: Icon(Icons.done_all, size: 10, color: Colors.white70),
+                    child: Icon(Icons.done_all, size: 10, color: Colors.white),
                   )
               ],
             )
@@ -1017,10 +999,14 @@ class _ChatbotConsoleSheetState extends ConsumerState<ChatbotConsoleSheet> {
 
     return FractionallySizedBox(
       heightFactor: 0.85,
-      child: Container(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: Column(
-          children: [
+      child: GlassmorphicContainer(
+        borderRadius: 24,
+        blur: 20,
+        opacity: 0.85,
+        child: Container(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          child: Column(
+            children: [
             // Handle header
             Container(
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -1031,7 +1017,7 @@ class _ChatbotConsoleSheetState extends ConsumerState<ChatbotConsoleSheet> {
               ),
               child: Column(
                 children: [
-                  Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade800, borderRadius: BorderRadius.circular(2))),
+                  Container(width: 40, height: 4, decoration: BoxDecoration(color: PremiumTheme.goldBorder, borderRadius: BorderRadius.circular(2))),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -1076,13 +1062,13 @@ class _ChatbotConsoleSheetState extends ConsumerState<ChatbotConsoleSheet> {
                             bottomLeft: Radius.circular(turn.isUser ? 16 : 2),
                             bottomRight: Radius.circular(turn.isUser ? 2 : 16),
                           ),
-                          border: turn.isUser ? null : Border.all(color: Colors.white10),
+                          border: turn.isUser ? null : Border.all(color: PremiumTheme.goldBorder),
                         ),
                         constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
                         child: Text(
                           turn.text,
                           style: GoogleFonts.inter(
-                            color: turn.isUser ? PremiumTheme.primaryBgBlack : PremiumTheme.textWhite,
+                            color: turn.isUser ? Colors.white : PremiumTheme.textWhite,
                             fontSize: 14.5,
                             height: 1.4,
                           ),
@@ -1128,7 +1114,7 @@ class _ChatbotConsoleSheetState extends ConsumerState<ChatbotConsoleSheet> {
                                       children: [
                                         hasPhoto
                                             ? CachedNetworkImage(imageUrl: photoUrl, fit: BoxFit.cover)
-                                            : Container(color: Colors.grey.shade900),
+                                            : Container(color: PremiumTheme.surfaceElevated, child: const Icon(Icons.person, color: PremiumTheme.goldLight)),
                                         // bottom black overlay text
                                         Positioned(
                                           bottom: 0,
@@ -1167,7 +1153,7 @@ class _ChatbotConsoleSheetState extends ConsumerState<ChatbotConsoleSheet> {
             ),
 
             // Typing indicators progress
-            if (chatState.isLoading)
+            if (chatState.isChatbotLoading)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8),
                 child: Row(
@@ -1208,7 +1194,7 @@ class _ChatbotConsoleSheetState extends ConsumerState<ChatbotConsoleSheet> {
                   ),
                   const SizedBox(width: 8),
                   IconButton(
-                    icon: const Icon(Icons.send_rounded, color: Colors.black87),
+                    icon: const Icon(Icons.send_rounded, color: PremiumTheme.goldAccent),
                     onPressed: _sendPrompt,
                   ),
                 ],
@@ -1216,345 +1202,8 @@ class _ChatbotConsoleSheetState extends ConsumerState<ChatbotConsoleSheet> {
             )
           ],
         ),
+       ),
       ),
-    );
-  }
-}
-
-// ---------------- ACTIVE CALL OVERLAY WIDGET ----------------
-class ActiveCallOverlay extends StatefulWidget {
-  final Map<String, dynamic> partner;
-  final bool isIncoming;
-  final String status; // 'dialing', 'ringing', 'connected'
-  final VoidCallback onAccept;
-  final VoidCallback onDecline;
-  final VoidCallback onEnd;
-
-  const ActiveCallOverlay({
-    super.key,
-    required this.partner,
-    required this.isIncoming,
-    required this.status,
-    required this.onAccept,
-    required this.onDecline,
-    required this.onEnd,
-  });
-
-  @override
-  State<ActiveCallOverlay> createState() => _ActiveCallOverlayState();
-}
-
-class _ActiveCallOverlayState extends State<ActiveCallOverlay> {
-  Timer? _timer;
-  int _seconds = 0;
-  bool _isMuted = false;
-  bool _isSpeaker = false;
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.status == 'connected') {
-      _startTimer();
-    }
-  }
-
-  @override
-  void didUpdateWidget(ActiveCallOverlay oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.status == 'connected' && oldWidget.status != 'connected') {
-      _startTimer();
-    } else if (widget.status != 'connected') {
-      _timer?.cancel();
-    }
-  }
-
-  void _startTimer() {
-    _timer?.cancel();
-    _seconds = 0;
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (mounted) {
-        setState(() {
-          _seconds++;
-        });
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  String _formatDuration(int totalSecs) {
-    final mins = totalSecs ~/ 60;
-    final secs = totalSecs % 60;
-    return '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final photos = widget.partner['photos'] as List<dynamic>? ?? [];
-    final hasPhoto = photos.isNotEmpty;
-    final photoUrl = hasPhoto 
-        ? (photos[0].startsWith('http') ? photos[0] : '${ApiService.baseUrl}${photos[0]}')
-        : '';
-
-    return Material(
-      color: Colors.black.withOpacity(0.95),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Blurred background image
-          if (hasPhoto)
-            Positioned.fill(
-              child: Opacity(
-                opacity: 0.15,
-                child: CachedNetworkImage(
-                  imageUrl: photoUrl,
-                  fit: BoxFit.cover,
-                  errorWidget: (c, o, s) => const SizedBox(),
-                ),
-              ),
-            ),
-          
-          SafeArea(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                // Top header
-                Column(
-                  children: [
-                    Text(
-                      'IN-APP CALL',
-                      style: GoogleFonts.inter(
-                        color: PremiumTheme.goldAccent,
-                        fontSize: 12,
-                        letterSpacing: 2,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      widget.partner['name'] ?? 'User',
-                      style: GoogleFonts.cormorantGaramond(
-                        color: Colors.white,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      widget.status == 'connected'
-                          ? _formatDuration(_seconds)
-                          : widget.status == 'dialing'
-                              ? 'DIALING...'
-                              : 'RINGING...',
-                      style: GoogleFonts.inter(
-                        color: PremiumTheme.textMuted,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Central pulsing Avatar
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Pulsing Ring Animation
-                    _PulsingCallRing(),
-                    
-                    Container(
-                      width: 140,
-                      height: 140,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: PremiumTheme.goldAccent, width: 2.5),
-                        boxShadow: [
-                          BoxShadow(
-                            color: PremiumTheme.goldAccent.withOpacity(0.2),
-                            blurRadius: 20,
-                            spreadRadius: 4,
-                          )
-                        ],
-                      ),
-                      child: ClipOval(
-                        child: hasPhoto
-                            ? CachedNetworkImage(
-                                imageUrl: photoUrl,
-                                fit: BoxFit.cover,
-                              )
-                            : Container(
-                                color: Colors.grey.shade900,
-                                child: const Icon(Icons.person, size: 70, color: Colors.white30),
-                              ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Controls
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: widget.isIncoming && widget.status == 'ringing'
-                      ? Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            // Decline Button
-                            _buildCallButton(
-                              icon: Icons.call_end_rounded,
-                              label: 'Decline',
-                              color: PremiumTheme.crimsonRed,
-                              onTap: widget.onDecline,
-                            ),
-                            // Accept Button
-                            _buildCallButton(
-                              icon: Icons.phone_rounded,
-                              label: 'Accept',
-                              color: Colors.green,
-                              onTap: widget.onAccept,
-                            ),
-                          ],
-                        )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            // Mute
-                            _buildCallIconButton(
-                              icon: _isMuted ? Icons.mic_off : Icons.mic,
-                              onTap: () => setState(() => _isMuted = !_isMuted),
-                              isActive: _isMuted,
-                            ),
-                            // End Call Button
-                            _buildCallButton(
-                              icon: Icons.call_end_rounded,
-                              label: 'End Call',
-                              color: PremiumTheme.crimsonRed,
-                              onTap: widget.onEnd,
-                            ),
-                            // Speaker
-                            _buildCallIconButton(
-                              icon: _isSpeaker ? Icons.volume_up : Icons.volume_down,
-                              onTap: () => setState(() => _isSpeaker = !_isSpeaker),
-                              isActive: _isSpeaker,
-                            ),
-                          ],
-                        ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCallButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: onTap,
-          child: Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: color,
-            ),
-            child: Icon(icon, color: Colors.white, size: 30),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: GoogleFonts.inter(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCallIconButton({
-    required IconData icon,
-    required VoidCallback onTap,
-    required bool isActive,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 52,
-        height: 52,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: isActive ? Colors.white : Colors.white10,
-        ),
-        child: Icon(
-          icon,
-          color: isActive ? Colors.black : Colors.white70,
-          size: 24,
-        ),
-      ),
-    );
-  }
-}
-
-// Glowing pulsing concentric rings
-class _PulsingCallRing extends StatefulWidget {
-  @override
-  State<_PulsingCallRing> createState() => _PulsingCallRingState();
-}
-
-class _PulsingCallRingState extends State<_PulsingCallRing>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Stack(
-          alignment: Alignment.center,
-          children: List.generate(2, (index) {
-            final delay = index * 0.5;
-            final progress = (_controller.value + delay) % 1.0;
-            final size = 140.0 + (progress * 80.0);
-            final opacity = (1.0 - progress) * 0.4;
-            return Container(
-              width: size,
-              height: size,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: PremiumTheme.goldAccent.withOpacity(opacity),
-                  width: 2,
-                ),
-              ),
-            );
-          }),
-        );
-      },
     );
   }
 }

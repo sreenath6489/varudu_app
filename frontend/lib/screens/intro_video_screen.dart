@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../main.dart';
+import '../theme/premium_theme.dart';
 
 class IntroVideoScreen extends StatefulWidget {
   const IntroVideoScreen({super.key});
@@ -91,7 +92,7 @@ class _IntroVideoScreenState extends State<IntroVideoScreen> {
           else
             // Fallback black background with simple loader while loading or if missing
             const Center(
-              child: CircularProgressIndicator(color: Colors.white),
+              child: CircularProgressIndicator(color: PremiumTheme.goldAccent),
             ),
 
           // skip button
@@ -106,7 +107,7 @@ class _IntroVideoScreenState extends State<IntroVideoScreen> {
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.4),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white24),
+                    border: Border.all(color: PremiumTheme.goldBright.withOpacity(0.5)),
                   ),
                   child: Text(
                     'Skip',

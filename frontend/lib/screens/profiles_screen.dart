@@ -10,6 +10,8 @@ import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
 import '../theme/premium_theme.dart';
 import 'astro_match_screen.dart';
+import '../widgets/aesthetic_background.dart';
+import '../widgets/glassmorphic_container.dart';
 
 enum ViewMode { stack, reels }
 
@@ -122,7 +124,7 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
               type == 'rose' ? 'Premium Rose Swipe Sent! 🌹' : 'Liked $profileName!',
               style: const TextStyle(color: Colors.white),
             ),
-            backgroundColor: Colors.black,
+            backgroundColor: PremiumTheme.goldAccent,
             duration: const Duration(seconds: 2),
           ),
         );
@@ -131,7 +133,7 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(e.toString(), style: const TextStyle(color: Colors.white)),
-          backgroundColor: Colors.black,
+          backgroundColor: PremiumTheme.crimsonRed,
         ),
       );
     }
@@ -141,40 +143,50 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: PremiumTheme.surfaceCard,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: PremiumTheme.goldBorder, width: 1.5),
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(28),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.favorite_rounded, color: Colors.black, size: 72),
+              const Icon(Icons.favorite_rounded, color: PremiumTheme.crimsonRed, size: 72),
               const SizedBox(height: 16),
               Text(
                 'It\'s a Match! 🌹',
-                style: GoogleFonts.inter(
-                  fontSize: 24,
+                style: GoogleFonts.cormorantGaramond(
+                  fontSize: 26,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black,
+                  color: PremiumTheme.textWhite,
                 ),
               ),
               const SizedBox(height: 12),
               Text(
                 'You and $name have expressed mutual interest. Start chatting to know each other!',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(color: Colors.grey.shade600, fontSize: 14),
+                style: GoogleFonts.inter(color: PremiumTheme.textSilver, fontSize: 14),
               ),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: PremiumTheme.buttonGradient,
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Text('Great!'),
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: const Text('Great!'),
+                  ),
                 ),
               )
             ],
@@ -189,10 +201,7 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return DraggableScrollableSheet(
           initialChildSize: 0.6,
@@ -200,9 +209,13 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
           minChildSize: 0.4,
           expand: false,
           builder: (context, scrollController) {
-            return SingleChildScrollView(
-              controller: scrollController,
-              padding: const EdgeInsets.all(24),
+            return GlassmorphicContainer(
+              borderRadius: 24,
+              blur: 20,
+              opacity: 0.85,
+              padding: const EdgeInsets.only(top: 12, left: 24, right: 24, bottom: 24),
+              child: SingleChildScrollView(
+                controller: scrollController,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -211,7 +224,7 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
+                        color: PremiumTheme.goldBorder,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -228,21 +241,21 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
                             children: [
                               Text(
                                 '${profile['name']}, ${profile['age']}',
-                                style: GoogleFonts.inter(
+                                style: GoogleFonts.cormorantGaramond(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.black,
+                                  color: PremiumTheme.textWhite,
                                 ),
                               ),
                               const SizedBox(width: 8),
                               if (profile['face_verified'] == true)
-                                const Icon(Icons.verified, color: Colors.black, size: 20),
+                                const Icon(Icons.verified, color: PremiumTheme.goldAccent, size: 20),
                             ],
                           ),
                           const SizedBox(height: 4),
                           Row(
                             children: [
-                              const Icon(Icons.location_on_rounded, color: Colors.black, size: 16),
+                              const Icon(Icons.location_on_rounded, color: PremiumTheme.goldAccent, size: 16),
                               const SizedBox(width: 4),
                               Text(
                                 profile['city'] ?? 'Location N/A',
@@ -253,32 +266,42 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
                         ],
                       ),
 
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => AstroMatchScreen(targetUser: profile),
-                            ),
-                          );
-                        },
-                        icon: const Icon(Icons.auto_awesome_rounded, size: 16, color: Colors.white),
-                        label: const Text('Astro Match', style: TextStyle(color: Colors.white)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: PremiumTheme.buttonGradient,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(color: PremiumTheme.goldAccent.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 2)),
+                          ],
+                        ),
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AstroMatchScreen(targetUser: profile),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.auto_awesome_rounded, size: 16, color: Colors.white),
+                          label: const Text('Astro Match', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
                         ),
                       )
                     ],
                   ),
-                  const Divider(color: Colors.black12, height: 32),
+                  const Divider(color: PremiumTheme.goldBorder, height: 32),
 
                   Text(
                     'Astrological Coordinates',
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
+                    style: GoogleFonts.cormorantGaramond(
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                      color: PremiumTheme.goldAccent,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -292,10 +315,10 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
 
                   Text(
                     'Cultural & Professional Details',
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
+                    style: GoogleFonts.cormorantGaramond(
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                      color: PremiumTheme.goldAccent,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -307,12 +330,13 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
                   const SizedBox(height: 32),
                 ],
               ),
-            );
-          },
-        );
-      },
-    );
-  }
+            ),
+          );
+        },
+      );
+    },
+  );
+}
 
   Widget _buildDetailRow(String label, String value) {
     return Padding(
@@ -320,8 +344,8 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: GoogleFonts.inter(color: Colors.grey.shade600, fontSize: 14)),
-          Text(value, style: GoogleFonts.inter(color: Colors.black, fontSize: 14, fontWeight: FontWeight.bold)),
+          Text(label, style: GoogleFonts.inter(color: PremiumTheme.textSilver, fontSize: 14)),
+          Text(value, style: GoogleFonts.inter(color: PremiumTheme.textWhite, fontSize: 14, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -332,80 +356,75 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
     final discoverState = ref.watch(discoverProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Stack(
-        children: [
-          // Profiles matcher stack / reels
-          Positioned.fill(
-            child: discoverState.isLoading
-                ? const Center(child: CircularProgressIndicator(color: Colors.black))
-                : discoverState.errorMessage.isNotEmpty
-                    ? Center(
-                        child: Text(
-                          discoverState.errorMessage,
-                          style: GoogleFonts.inter(color: Colors.red),
-                        ),
-                      )
-                    : discoverState.profiles.isEmpty
-                        ? _buildEmptyState()
-                        : _currentMode == ViewMode.reels
-                            ? _buildReelsView(discoverState.profiles)
-                            : _buildStackView(discoverState.profiles),
-          ),
+      backgroundColor: Colors.transparent,
+      body: AestheticBackground(
+        verticalText: 'DISCOVER',
+        child: Stack(
+          children: [
+            // Profiles matcher stack / reels
+            Positioned.fill(
+              child: discoverState.isLoading
+                  ? const Center(child: CircularProgressIndicator(color: PremiumTheme.goldAccent))
+                  : discoverState.errorMessage.isNotEmpty
+                      ? Center(
+                          child: Text(
+                            discoverState.errorMessage,
+                            style: GoogleFonts.inter(color: Colors.red),
+                          ),
+                        )
+                      : discoverState.profiles.isEmpty
+                          ? _buildEmptyState()
+                          : _currentMode == ViewMode.reels
+                              ? _buildReelsView(discoverState.profiles)
+                              : _buildStackView(discoverState.profiles),
+            ),
 
-          // Header segmented control toggles (Minimalist Apple Style)
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    GestureDetector(
-                      onTap: () => Navigator.of(context).pop(),
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.9),
+            // Header segmented control toggles (Minimalist Apple Style)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: GlassmorphicContainer(
+                          padding: const EdgeInsets.all(10),
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.black12),
+                          child: const Icon(
+                            Icons.arrow_back_rounded,
+                            color: PremiumTheme.textWhite,
+                            size: 20,
+                          ),
                         ),
-                        child: const Icon(
-                          Icons.arrow_back_rounded,
-                          color: Colors.black,
-                          size: 20,
+                      ),
+
+                      // Segmented control toggle
+                      GlassmorphicContainer(
+                        height: 40,
+                        padding: const EdgeInsets.all(2),
+                        borderRadius: 20,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _buildModeToggle(ViewMode.stack, 'STACK'),
+                            _buildModeToggle(ViewMode.reels, 'REELS'),
+                          ],
                         ),
                       ),
-                    ),
 
-                    // Segmented control toggle
-                    Container(
-                      height: 40,
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.black12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildModeToggle(ViewMode.stack, 'STACK'),
-                          _buildModeToggle(ViewMode.reels, 'REELS'),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(width: 40), // Align center balance
-                  ],
+                      const SizedBox(width: 40), // Align center balance
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -422,19 +441,20 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
         height: 36,
         padding: const EdgeInsets.symmetric(horizontal: 18),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.transparent,
+          color: isSelected ? PremiumTheme.goldAccent : Colors.transparent,
           borderRadius: BorderRadius.circular(18),
           boxShadow: isSelected
-              ? [const BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))]
+              ? [BoxShadow(color: PremiumTheme.goldAccent.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 2))]
               : null,
         ),
         alignment: Alignment.center,
         child: Text(
           label,
           style: GoogleFonts.inter(
-            color: isSelected ? Colors.black : Colors.grey.shade600,
+            color: isSelected ? Colors.white : PremiumTheme.textSilver,
             fontSize: 12,
             fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
           ),
         ),
       ),
@@ -446,20 +466,20 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.favorite_border_rounded, size: 64, color: Colors.grey),
+          Icon(Icons.favorite_border_rounded, size: 64, color: PremiumTheme.goldAccent.withOpacity(0.4)),
           const SizedBox(height: 16),
           Text(
             'No profiles found',
             style: GoogleFonts.inter(
               fontSize: 20,
-              color: Colors.black,
+              color: PremiumTheme.textWhite,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             'Check back later for new profiles',
-            style: GoogleFonts.inter(color: Colors.grey, fontSize: 13),
+            style: GoogleFonts.inter(color: PremiumTheme.textMuted, fontSize: 13),
           ),
         ],
       ),
@@ -592,7 +612,7 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
                             ? CachedNetworkImage(
                                 imageUrl: activePhotoUrl,
                                 fit: BoxFit.cover,
-                                placeholder: (context, url) => const Center(child: CircularProgressIndicator(color: Colors.black)),
+                                placeholder: (context, url) => const Center(child: CircularProgressIndicator(color: PremiumTheme.goldAccent)),
                                 errorWidget: (context, url, err) => _buildReelsPlaceholder(),
                               )
                             : _buildReelsPlaceholder(),
@@ -751,9 +771,16 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
                             height: 48,
                             width: 48,
                             decoration: BoxDecoration(
-                              color: Colors.black45,
+                              gradient: PremiumTheme.roseGradient,
                               shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white30),
+                              border: Border.all(color: PremiumTheme.goldBright, width: 1.5),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: PremiumTheme.crimsonRed.withOpacity(0.35),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
                             ),
                             alignment: Alignment.center,
                             child: const Text('🌹', style: TextStyle(fontSize: 22)),
@@ -773,9 +800,9 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
 
   Widget _buildReelsPlaceholder() {
     return Container(
-      color: Colors.white,
+      color: PremiumTheme.surfaceElevated,
       child: const Center(
-        child: Icon(Icons.person_rounded, size: 80, color: Colors.black12),
+        child: Icon(Icons.person_rounded, size: 80, color: PremiumTheme.goldLight),
       ),
     );
   }
@@ -787,12 +814,19 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
         height: 48,
         width: 48,
         decoration: BoxDecoration(
-          color: Colors.black45,
+          color: PremiumTheme.surfaceCard.withOpacity(0.88),
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.white30),
+          border: Border.all(color: PremiumTheme.goldBorder, width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF6E522E).withOpacity(0.18),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         alignment: Alignment.center,
-        child: Icon(icon, color: color, size: 22),
+        child: Icon(icon, color: PremiumTheme.goldAccent, size: 22),
       ),
     );
   }
@@ -831,10 +865,16 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
           return Container(
             margin: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              color: Colors.white,
-              border: Border.all(color: Colors.black12),
-              boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 4))],
+              borderRadius: BorderRadius.circular(24),
+              color: PremiumTheme.surfaceCard,
+              border: Border.all(color: PremiumTheme.goldBorder, width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF6E522E).withOpacity(0.12),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(20),
@@ -855,7 +895,7 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
                         ? CachedNetworkImage(
                             imageUrl: activePhotoUrl,
                             fit: BoxFit.cover,
-                            placeholder: (context, url) => const Center(child: CircularProgressIndicator(color: Colors.black)),
+                            placeholder: (context, url) => const Center(child: CircularProgressIndicator(color: PremiumTheme.goldAccent)),
                             errorWidget: (context, url, err) => _buildReelsPlaceholder(),
                           )
                         : _buildReelsPlaceholder(),
@@ -949,11 +989,12 @@ class _ProfilesScreenState extends ConsumerState<ProfilesScreen> {
                               ),
                             ),
 
-                            TextButton(
+                            TextButton.icon(
                               onPressed: () => _showDetailsSheet(profile),
-                              child: Text(
+                              icon: const Icon(Icons.info_outline_rounded, color: PremiumTheme.goldBright, size: 16),
+                              label: Text(
                                 'View Profile Info',
-                                style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                style: GoogleFonts.inter(color: PremiumTheme.goldBright, fontWeight: FontWeight.bold, fontSize: 13),
                               ),
                             ),
                           ],

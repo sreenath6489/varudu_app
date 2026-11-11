@@ -6,6 +6,8 @@ import '../providers/requests_provider.dart';
 import '../providers/chat_provider.dart';
 import '../services/api_service.dart';
 import '../theme/premium_theme.dart';
+import '../widgets/aesthetic_background.dart';
+import '../widgets/glassmorphic_container.dart';
 
 class RequestsScreen extends ConsumerStatefulWidget {
   const RequestsScreen({super.key});
@@ -36,6 +38,7 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen> with SingleTick
       builder: (context) {
         return AlertDialog(
           backgroundColor: PremiumTheme.surfaceCard,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: PremiumTheme.goldBorder)),
           title: Text(
             'Accept Connection Request',
             style: GoogleFonts.cormorantGaramond(
@@ -57,7 +60,7 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen> with SingleTick
               onPressed: () => Navigator.pop(context, true),
               style: ElevatedButton.styleFrom(
                 backgroundColor: PremiumTheme.goldAccent,
-                foregroundColor: PremiumTheme.primaryBgBlack,
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
               child: Text('Spend 1 Rose', style: GoogleFonts.inter(fontWeight: FontWeight.bold)),
@@ -116,8 +119,10 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen> with SingleTick
     final requestsState = ref.watch(requestsProvider);
 
     return Scaffold(
-      backgroundColor: PremiumTheme.primaryBgBlack,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         title: Text(
           'REQUESTS HUB',
           style: GoogleFonts.cormorantGaramond(fontWeight: FontWeight.bold, color: PremiumTheme.textWhite),
@@ -134,17 +139,20 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen> with SingleTick
           ],
         ),
       ),
-      body: requestsState.isLoading
-          ? const Center(child: CircularProgressIndicator(color: PremiumTheme.goldAccent))
-          : requestsState.errorMessage.isNotEmpty
-              ? Center(child: Text(requestsState.errorMessage, style: GoogleFonts.inter(color: PremiumTheme.crimsonRed)))
-              : TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildReceivedTab(requestsState.received),
-                    _buildSentTab(requestsState.sent),
-                  ],
-                ),
+      body: AestheticBackground(
+        verticalText: 'REQUESTS',
+        child: requestsState.isLoading
+            ? const Center(child: CircularProgressIndicator(color: PremiumTheme.goldAccent))
+            : requestsState.errorMessage.isNotEmpty
+                ? Center(child: Text(requestsState.errorMessage, style: GoogleFonts.inter(color: PremiumTheme.crimsonRed)))
+                : TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildReceivedTab(requestsState.received),
+                      _buildSentTab(requestsState.sent),
+                    ],
+                  ),
+      ),
     );
   }
 
@@ -165,14 +173,10 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen> with SingleTick
             ? (photos[0].startsWith('http') ? photos[0] : '${ApiService.baseUrl}${photos[0]}')
             : '';
 
-        return Container(
+        return GlassmorphicContainer(
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: PremiumTheme.surfaceCard,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white10),
-          ),
+          borderRadius: 20,
           child: Row(
             children: [
               // Photo
@@ -185,10 +189,10 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen> with SingleTick
                       ? CachedNetworkImage(
                           imageUrl: photoUrl,
                           fit: BoxFit.cover,
-                          placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                          errorWidget: (context, url, err) => Container(color: Colors.grey.shade900),
+                          placeholder: (context, url) => const Center(child: CircularProgressIndicator(color: PremiumTheme.goldAccent)),
+                          errorWidget: (context, url, err) => Container(color: PremiumTheme.surfaceElevated, child: const Icon(Icons.person, color: PremiumTheme.goldLight)),
                         )
-                      : Container(color: Colors.grey.shade900),
+                      : Container(color: PremiumTheme.surfaceElevated, child: const Icon(Icons.person, color: PremiumTheme.goldLight)),
                 ),
               ),
               const SizedBox(width: 16),
@@ -242,7 +246,7 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen> with SingleTick
                               onPressed: () => _accept(item['interestId']),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: PremiumTheme.goldAccent,
-                                foregroundColor: PremiumTheme.primaryBgBlack,
+                                foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                               ),
                               child: Text('Accept', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12)),
@@ -295,14 +299,10 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen> with SingleTick
 
         final isAccepted = item['status'] == 'accepted';
 
-        return Container(
+        return GlassmorphicContainer(
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: PremiumTheme.surfaceCard,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white10),
-          ),
+          borderRadius: 20,
           child: Row(
             children: [
               ClipRRect(
@@ -314,10 +314,10 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen> with SingleTick
                       ? CachedNetworkImage(
                           imageUrl: photoUrl,
                           fit: BoxFit.cover,
-                          placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                          errorWidget: (context, url, err) => Container(color: Colors.grey.shade900),
+                          placeholder: (context, url) => const Center(child: CircularProgressIndicator(color: PremiumTheme.goldAccent)),
+                          errorWidget: (context, url, err) => Container(color: PremiumTheme.surfaceElevated, child: const Icon(Icons.person, color: PremiumTheme.goldLight)),
                         )
-                      : Container(color: Colors.grey.shade900),
+                      : Container(color: PremiumTheme.surfaceElevated, child: const Icon(Icons.person, color: PremiumTheme.goldLight)),
                 ),
               ),
               const SizedBox(width: 16),
@@ -368,7 +368,7 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen> with SingleTick
                           icon: const Icon(Icons.undo_rounded, size: 14),
                           label: Text('Withdraw Like', style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 12)),
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.white24),
+                            side: const BorderSide(color: PremiumTheme.goldBorder),
                             foregroundColor: PremiumTheme.textSilver,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           ),
@@ -391,7 +391,7 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen> with SingleTick
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.favorite_border_rounded, size: 48, color: Colors.white24),
+            Icon(Icons.favorite_border_rounded, size: 48, color: PremiumTheme.goldAccent.withOpacity(0.4)),
             const SizedBox(height: 16),
             Text(
               title,

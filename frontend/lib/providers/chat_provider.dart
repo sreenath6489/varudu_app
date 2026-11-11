@@ -47,7 +47,9 @@ class ChatState {
   final List<dynamic> matches; // profiles with status == accepted
   final List<ChatMessage> activeMessages;
   final List<ChatbotTurn> chatbotLogs;
-  final bool isLoading;
+  final bool isLoading; // overall / matches
+  final bool isChatbotLoading;
+  final bool isHistoryLoading;
   final bool isTyping;
   final String typingUser;
 
@@ -64,6 +66,8 @@ class ChatState {
     required this.activeMessages,
     required this.chatbotLogs,
     required this.isLoading,
+    this.isChatbotLoading = false,
+    this.isHistoryLoading = false,
     required this.isTyping,
     required this.typingUser,
     this.isInCall = false,
@@ -84,6 +88,8 @@ class ChatState {
           )
         ],
         isLoading: false,
+        isChatbotLoading: false,
+        isHistoryLoading: false,
         isTyping: false,
         typingUser: '',
         isInCall: false,
@@ -95,6 +101,8 @@ class ChatState {
     List<ChatMessage>? activeMessages,
     List<ChatbotTurn>? chatbotLogs,
     bool? isLoading,
+    bool? isChatbotLoading,
+    bool? isHistoryLoading,
     bool? isTyping,
     String? typingUser,
     bool? isInCall,
@@ -109,6 +117,8 @@ class ChatState {
       activeMessages: activeMessages ?? this.activeMessages,
       chatbotLogs: chatbotLogs ?? this.chatbotLogs,
       isLoading: isLoading ?? this.isLoading,
+      isChatbotLoading: isChatbotLoading ?? this.isChatbotLoading,
+      isHistoryLoading: isHistoryLoading ?? this.isHistoryLoading,
       isTyping: isTyping ?? this.isTyping,
       typingUser: typingUser ?? this.typingUser,
       isInCall: isInCall ?? this.isInCall,
@@ -214,6 +224,13 @@ class ChatNotifier extends StateNotifier<ChatState> {
     }
   }
 
+  // Disconnect socket (called on logout)
+  void disconnectSocket() {
+    _socket?.disconnect();
+    _socket?.dispose();
+    _socket = null;
+  }
+
   // Load matches
   Future<void> fetchMatches() async {
     state = state.copyWith(isLoading: true);
@@ -246,14 +263,16 @@ class ChatNotifier extends StateNotifier<ChatState> {
     required String receiverId,
     required String senderName,
     required String senderPhoto,
+    required String partnerName,
+    required String partnerPhoto,
   }) {
     if (_socket == null) return;
     state = state.copyWith(
       isInCall: true,
       isIncomingCall: false,
       callPartnerId: receiverId,
-      callPartnerName: senderName,
-      callPartnerPhoto: senderPhoto,
+      callPartnerName: partnerName,
+      callPartnerPhoto: partnerPhoto,
       callStatus: 'dialing',
     );
     _socket!.emit('call-dial', {
@@ -304,15 +323,15 @@ class ChatNotifier extends StateNotifier<ChatState> {
 
   // Load Chat Logs
   Future<void> fetchChatHistory(String partnerId) async {
-    state = state.copyWith(isLoading: true, activeMessages: []);
+    state = state.copyWith(isHistoryLoading: true, activeMessages: []);
     try {
       final apiService = _ref.read(apiServiceProvider);
       final history = await apiService.getChats(partnerId);
       final parsed = history.map((json) => ChatMessage.fromJson(json)).toList();
       
-      state = state.copyWith(activeMessages: parsed, isLoading: false);
+      state = state.copyWith(activeMessages: parsed, isHistoryLoading: false);
     } catch (e) {
-      state = state.copyWith(isLoading: false);
+      state = state.copyWith(isHistoryLoading: false);
     }
   }
 
@@ -347,7 +366,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
     final userTurn = ChatbotTurn(text: messageText, isUser: true);
     state = state.copyWith(
       chatbotLogs: [...state.chatbotLogs, userTurn],
-      isLoading: true
+      isChatbotLoading: true
     );
 
     try {
@@ -362,7 +381,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
 
       state = state.copyWith(
         chatbotLogs: [...state.chatbotLogs, botTurn],
-        isLoading: false
+        isChatbotLoading: false
       );
     } catch (e) {
       final errorTurn = ChatbotTurn(
@@ -371,7 +390,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
       );
       state = state.copyWith(
         chatbotLogs: [...state.chatbotLogs, errorTurn],
-        isLoading: false
+        isChatbotLoading: false
       );
     }
   }

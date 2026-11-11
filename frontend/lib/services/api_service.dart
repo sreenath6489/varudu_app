@@ -5,9 +5,36 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static String get baseUrl {
-    // Expose backend publicly via ngrok for testing on physical devices and emulator
-    return 'https://rocklike-cylinder-countless.ngrok-free.dev';
+  static String _baseUrl = 'https://rocklike-cylinder-countless.ngrok-free.dev';
+
+  static String get baseUrl => _baseUrl;
+
+  static set baseUrl(String value) {
+    _baseUrl = value;
+  }
+
+  // Load backend base URL from SharedPreferences
+  static Future<void> loadBaseUrl() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedUrl = prefs.getString('api_base_url');
+      if (savedUrl != null && savedUrl.isNotEmpty) {
+        _baseUrl = savedUrl;
+      }
+    } catch (e) {
+      debugPrint('Failed to load api_base_url: $e');
+    }
+  }
+
+  // Save backend base URL to SharedPreferences and memory
+  static Future<void> saveBaseUrl(String url) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('api_base_url', url);
+      _baseUrl = url;
+    } catch (e) {
+      debugPrint('Failed to save api_base_url: $e');
+    }
   }
 
   String? _token;
@@ -33,39 +60,67 @@ class ApiService {
     await prefs.remove('auth_token');
   }
 
-  // Request OTP
-  Future<Map<String, dynamic>> sendOtp(String email) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/api/auth/send-otp'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email}),
-    );
+  // Safe helper to decode response body and throw clean Exception if HTML/502/error
+  dynamic _handleResponse(http.Response response, {String defaultError = 'Request failed'}) {
+    dynamic data;
+    try {
+      data = jsonDecode(response.body);
+    } catch (e) {
+      if (response.body.toLowerCase().contains('html') || response.statusCode >= 500) {
+        throw Exception(
+          'Server returned an invalid HTML page (Status ${response.statusCode}). The backend might be offline or undergoing maintenance.'
+        );
+      }
+      throw Exception('Failed to parse server response (Status ${response.statusCode}): $e');
+    }
 
-    final data = jsonDecode(response.body);
-    if (response.statusCode == 200) {
+    if (response.statusCode >= 200 && response.statusCode < 300) {
       return data;
     } else {
-      throw Exception(data['error'] ?? 'Failed to send OTP');
+      final errorMessage = (data is Map && data.containsKey('error'))
+          ? data['error']
+          : '$defaultError (Status ${response.statusCode})';
+      throw Exception(errorMessage);
+    }
+  }
+
+  // Request OTP
+  Future<Map<String, dynamic>> sendOtp(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/auth/send-otp'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email}),
+      ).timeout(const Duration(seconds: 15));
+      return _handleResponse(response, defaultError: 'Failed to send OTP') as Map<String, dynamic>;
+    } catch (e) {
+      if (e.toString().contains('SocketException') || e.toString().contains('Connection failed') || e.toString().contains('TimeoutException')) {
+        throw Exception('Cannot connect to server. Please check your internet connection or server status.');
+      }
+      rethrow;
     }
   }
 
   // Verify OTP
   Future<Map<String, dynamic>> verifyOtp(String email, String otp) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/api/auth/verify-otp'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'email': email, 'otp': otp}),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/auth/verify-otp'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'otp': otp}),
+      ).timeout(const Duration(seconds: 15));
 
-    final data = jsonDecode(response.body);
-    if (response.statusCode == 200) {
+      final data = _handleResponse(response, defaultError: 'Failed to verify OTP') as Map<String, dynamic>;
       final token = data['token'];
       if (token != null) {
         await setToken(token);
       }
       return data;
-    } else {
-      throw Exception(data['error'] ?? 'Failed to verify OTP');
+    } catch (e) {
+      if (e.toString().contains('SocketException') || e.toString().contains('Connection failed') || e.toString().contains('TimeoutException')) {
+        throw Exception('Cannot connect to server. Please check your internet connection or server status.');
+      }
+      rethrow;
     }
   }
 
@@ -659,6 +714,26 @@ class ApiService {
       return data;
     } else {
       throw Exception(data['error'] ?? 'Failed to converse with chatbot');
+    }
+  }
+
+  // Get call log history (Instagram style)
+  Future<List<dynamic>> getCallHistory() async {
+    if (_token == null) throw Exception('Not authenticated');
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/calls/history'),
+      headers: {
+        'Authorization': 'Bearer $_token',
+        'Content-Type': 'application/json',
+      },
+    );
+
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      return data as List<dynamic>;
+    } else {
+      throw Exception(data['error'] ?? 'Failed to load call history');
     }
   }
 }

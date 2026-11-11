@@ -90,6 +90,7 @@ app.post('/api/astro/unlock-match', authMiddleware, astroController.unlockMatch)
 // 7. Chat history (Authenticated)
 app.get('/api/chats/:partnerId', authMiddleware, chatController.getChats);
 app.post('/api/chatbot/message', authMiddleware, chatController.chatbotMessage);
+app.get('/api/calls/history', authMiddleware, chatController.getCallHistory);
 
 // Simple health check
 app.get('/', (req, res) => {
@@ -102,8 +103,13 @@ const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"]
-  }
+  },
+  allowEIO3: true
 });
+
+// Keep track of active calls and socket/user mapping in memory
+const activeCalls = new Map();
+const socketUserMap = new Map();
 
 io.on('connection', (socket) => {
   console.log('Socket connected:', socket.id);
@@ -111,6 +117,7 @@ io.on('connection', (socket) => {
   // User joins their personal room named after their userId
   socket.on('join', (userId) => {
     socket.join(String(userId));
+    socketUserMap.set(socket.id, String(userId));
     console.log(`User ${userId} joined room`);
   });
 
@@ -140,30 +147,109 @@ io.on('connection', (socket) => {
   });
 
   // Calling signaling
-  socket.on('call-dial', ({ senderId, receiverId, senderName, senderPhoto }) => {
+  socket.on('call-dial', async ({ senderId, receiverId, senderName, senderPhoto }) => {
     console.log(`Dialing call: ${senderId} to ${receiverId}`);
+    const logId = crypto.randomUUID();
+    try {
+      await prisma.call_logs.create({
+        data: {
+          id: logId,
+          caller_id: String(senderId),
+          receiver_id: String(receiverId),
+          status: 'missed',
+          duration: 0,
+          created_at: new Date()
+        }
+      });
+      activeCalls.set(String(senderId), { logId, partnerId: String(receiverId), isCaller: true, dialTime: Date.now() });
+      activeCalls.set(String(receiverId), { logId, partnerId: String(senderId), isCaller: false, dialTime: Date.now() });
+    } catch (e) {
+      console.error('Error creating call log:', e);
+    }
     io.to(String(receiverId)).emit('incoming-call', { senderId, senderName, senderPhoto });
   });
 
   socket.on('call-accept', ({ senderId, receiverId }) => {
     console.log(`Call accepted: ${senderId} by ${receiverId}`);
+    
+    // update start time of the call
+    const callerCall = activeCalls.get(String(senderId));
+    const receiverCall = activeCalls.get(String(receiverId));
+    const startTime = Date.now();
+    
+    if (callerCall) callerCall.startTime = startTime;
+    if (receiverCall) receiverCall.startTime = startTime;
+    
     io.to(String(senderId)).emit('call-connected', { receiverId });
   });
 
-  socket.on('call-reject', ({ senderId, receiverId }) => {
+  socket.on('call-reject', async ({ senderId, receiverId }) => {
     console.log(`Call rejected: ${senderId} by ${receiverId}`);
+    const callerCall = activeCalls.get(String(senderId));
+    if (callerCall) {
+      try {
+        await prisma.call_logs.update({
+          where: { id: callerCall.logId },
+          data: { status: 'rejected' }
+        });
+      } catch (e) {
+        console.error('Error updating call log to rejected:', e);
+      }
+    }
+    activeCalls.delete(String(senderId));
+    activeCalls.delete(String(receiverId));
     io.to(String(senderId)).emit('call-rejected', { receiverId });
     io.to(String(receiverId)).emit('call-rejected', { senderId });
   });
 
-  socket.on('call-end', ({ senderId, receiverId }) => {
+  socket.on('call-end', async ({ senderId, receiverId }) => {
     console.log(`Call ended between ${senderId} and ${receiverId}`);
+    const callInfo = activeCalls.get(String(senderId)) || activeCalls.get(String(receiverId));
+    if (callInfo) {
+      const duration = callInfo.startTime ? Math.round((Date.now() - callInfo.startTime) / 1000) : 0;
+      const finalStatus = callInfo.startTime ? 'completed' : 'missed';
+      try {
+        await prisma.call_logs.update({
+          where: { id: callInfo.logId },
+          data: { status: finalStatus, duration }
+        });
+      } catch (e) {
+        console.error('Error updating call log to final:', e);
+      }
+    }
+    activeCalls.delete(String(senderId));
+    activeCalls.delete(String(receiverId));
     io.to(String(receiverId)).emit('call-terminated', { senderId });
     io.to(String(senderId)).emit('call-terminated', { receiverId });
   });
 
-  socket.on('disconnect', () => {
+  socket.on('disconnect', async () => {
     console.log('Socket disconnected:', socket.id);
+    const userId = socketUserMap.get(socket.id);
+    if (userId) {
+      socketUserMap.delete(socket.id);
+      
+      // If the user was in an active call, terminate it!
+      const callInfo = activeCalls.get(String(userId));
+      if (callInfo) {
+        const partnerId = callInfo.partnerId;
+        const duration = callInfo.startTime ? Math.round((Date.now() - callInfo.startTime) / 1000) : 0;
+        const finalStatus = callInfo.startTime ? 'completed' : 'missed';
+        try {
+          await prisma.call_logs.update({
+            where: { id: callInfo.logId },
+            data: { status: finalStatus, duration }
+          });
+        } catch (e) {
+          console.error('Error updating call log on disconnect:', e);
+        }
+        
+        // Notify the partner that the call is terminated
+        io.to(String(partnerId)).emit('call-terminated', { senderId: userId });
+        activeCalls.delete(String(userId));
+        activeCalls.delete(String(partnerId));
+      }
+    }
   });
 });
 

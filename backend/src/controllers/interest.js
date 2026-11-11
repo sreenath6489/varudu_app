@@ -462,6 +462,22 @@ exports.getMatches = async (req, res) => {
       orderBy: { accepted_at: 'desc' }
     });
 
+    // Gather partner IDs for batch loading
+    const partnerIds = matchedInterests.map(interest => {
+      const isSender = interest.sender_id === currentUserId;
+      return isSender ? interest.receiver_id : interest.sender_id;
+    }).filter(Boolean);
+
+    // Batch query all partner users
+    const partnerUsers = await prisma.users.findMany({
+      where: {
+        id: { in: partnerIds }
+      }
+    });
+
+    // Map partner users by ID for O(1) lookup
+    const partnerUsersMap = new Map(partnerUsers.map(u => [u.id, u]));
+
     // Fetch the other users' profiles
     const matches = [];
     for (const interest of matchedInterests) {
@@ -470,10 +486,7 @@ exports.getMatches = async (req, res) => {
 
       if (!partnerId) continue;
 
-      const partnerUser = await prisma.users.findUnique({
-        where: { id: partnerId }
-      });
-
+      const partnerUser = partnerUsersMap.get(partnerId);
       if (!partnerUser) continue;
 
       // Determine unlock status

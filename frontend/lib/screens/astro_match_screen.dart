@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../providers/auth_provider.dart';
 import '../services/api_service.dart';
 import '../theme/premium_theme.dart';
+import '../widgets/aesthetic_background.dart';
 
 class AstroMatchScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> targetUser;
@@ -81,7 +82,7 @@ class _AstroMatchScreenState extends ConsumerState<AstroMatchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: PremiumTheme.primaryBgBlack,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(
           'ASTROLOGY MATCH',
@@ -92,16 +93,19 @@ class _AstroMatchScreenState extends ConsumerState<AstroMatchScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: PremiumTheme.goldAccent))
-          : _errorMessage.isNotEmpty
-              ? Center(
-                  child: Text(
-                    _errorMessage,
-                    style: GoogleFonts.inter(color: PremiumTheme.crimsonRed),
-                  ),
-                )
-              : _buildContent(),
+      body: AestheticBackground(
+        verticalText: 'ASTRO',
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: PremiumTheme.goldAccent))
+            : _errorMessage.isNotEmpty
+                ? Center(
+                    child: Text(
+                      _errorMessage,
+                      style: GoogleFonts.inter(color: PremiumTheme.crimsonRed),
+                    ),
+                  )
+                : _buildContent(),
+      ),
     );
   }
 
@@ -128,7 +132,7 @@ class _AstroMatchScreenState extends ConsumerState<AstroMatchScreen> {
                 decoration: BoxDecoration(
                   color: PremiumTheme.surfaceCard,
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: Colors.white12),
+                  border: Border.all(color: PremiumTheme.goldBorder, width: 1.2),
                 ),
                 child: Column(
                   children: [
@@ -139,12 +143,12 @@ class _AstroMatchScreenState extends ConsumerState<AstroMatchScreen> {
                         Container(
                           height: 40,
                           width: 1,
-                          color: Colors.white12,
+                          color: PremiumTheme.goldBorder,
                         ),
                         _buildAstroNode(widget.targetUser['name'] ?? 'Target', tarAstro['rasi'] ?? 'Leo', tarAstro['star'] ?? 'Magha'),
                       ],
                     ),
-                    const Divider(color: Colors.white12, height: 40),
+                    const Divider(color: PremiumTheme.goldBorder, height: 40),
 
                     // Circular ring score compatibility
                     Center(
@@ -159,7 +163,7 @@ class _AstroMatchScreenState extends ConsumerState<AstroMatchScreen> {
                                 child: CircularProgressIndicator(
                                   value: score / 36.0,
                                   strokeWidth: 8,
-                                  backgroundColor: Colors.white12,
+                                  backgroundColor: PremiumTheme.goldLight,
                                   color: PremiumTheme.goldAccent,
                                 ),
                               ),
@@ -192,7 +196,7 @@ class _AstroMatchScreenState extends ConsumerState<AstroMatchScreen> {
                             style: GoogleFonts.inter(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: PremiumTheme.textWhite,
+                              color: Colors.white,
                             ),
                           ),
                         ],
@@ -217,10 +221,10 @@ class _AstroMatchScreenState extends ConsumerState<AstroMatchScreen> {
                 decoration: BoxDecoration(
                   color: PremiumTheme.surfaceCard,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white12),
+                  border: Border.all(color: PremiumTheme.goldBorder, width: 1.2),
                 ),
                 child: Table(
-                  border: TableBorder.symmetric(inside: const BorderSide(color: Colors.white10)),
+                  border: TableBorder.symmetric(inside: const BorderSide(color: PremiumTheme.goldLight)),
                   children: [
                     _buildTableHeader(),
                     ...breakdown.entries.map((entry) {
@@ -252,7 +256,7 @@ class _AstroMatchScreenState extends ConsumerState<AstroMatchScreen> {
                     decoration: BoxDecoration(
                       color: PremiumTheme.surfaceCard,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white12),
+                      border: Border.all(color: PremiumTheme.goldBorder, width: 1.2),
                     ),
                     child: Text(
                       _matchDetails!['report'] ?? '',
@@ -272,7 +276,7 @@ class _AstroMatchScreenState extends ConsumerState<AstroMatchScreen> {
                         child: BackdropFilter(
                           filter: ImageFilter.blur(sigmaX: 5.5, sigmaY: 5.5),
                           child: Container(
-                            color: Colors.black.withOpacity(0.5),
+                            color: const Color(0xFF241C15).withOpacity(0.65),
                             alignment: Alignment.center,
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -283,7 +287,7 @@ class _AstroMatchScreenState extends ConsumerState<AstroMatchScreen> {
                                   'Detailed Cosmic Report Locked',
                                   style: GoogleFonts.inter(
                                     fontWeight: FontWeight.bold,
-                                    color: PremiumTheme.textWhite,
+                                    color: Colors.white,
                                     fontSize: 16,
                                   ),
                                 ),
@@ -291,7 +295,7 @@ class _AstroMatchScreenState extends ConsumerState<AstroMatchScreen> {
                                 Text(
                                   'Unlock using 1 Rose',
                                   style: GoogleFonts.inter(
-                                    color: PremiumTheme.textSilver,
+                                    color: Color(0xFFE4D8C4),
                                     fontSize: 13,
                                   ),
                                 ),
@@ -311,7 +315,7 @@ class _AstroMatchScreenState extends ConsumerState<AstroMatchScreen> {
                                     child: Text(
                                       'Unlock now 🌹',
                                       style: GoogleFonts.outfit(
-                                        color: PremiumTheme.primaryBgBlack,
+                                        color: Colors.white,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -346,7 +350,7 @@ class _AstroMatchScreenState extends ConsumerState<AstroMatchScreen> {
           style: GoogleFonts.cormorantGaramond(
             fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: PremiumTheme.goldLight,
+            color: PremiumTheme.goldAccent,
           ),
         ),
         Text(
@@ -359,7 +363,7 @@ class _AstroMatchScreenState extends ConsumerState<AstroMatchScreen> {
 
   TableRow _buildTableHeader() {
     return TableRow(
-      decoration: const BoxDecoration(color: Colors.white10),
+      decoration: const BoxDecoration(color: PremiumTheme.surfaceElevated),
       children: [
         Padding(
           padding: const EdgeInsets.all(12.0),
